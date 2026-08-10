@@ -24,17 +24,16 @@ export default function HomePage() {
     <section className="storefront-hero" aria-labelledby="storefront-title">
       <div className="container storefront-hero__grid">
         <div className="storefront-hero__content">
-          <span>Painel de Comando · Loja técnica industrial</span>
-          <h1 id="storefront-title">Painéis elétricos para quem não pode parar.</h1>
-          <p>Encontre soluções para partida, proteção e controle de motores, com especificação clara e suporte antes da compra.</p>
-          <div className="storefront-hero__actions"><ButtonLink to="/produtos">Explorar o catálogo</ButtonLink><ButtonLink to="/orcamento" variant="secondary">Configurar um painel</ButtonLink></div>
-          <div className="storefront-hero__meta"><span><strong>Compra assistida</strong>Escolha com apoio técnico</span><span><strong>Projeto sob medida</strong>Cotação conforme a aplicação</span></div>
+          <span>Linha de painéis elétricos · projetos sob medida</span>
+          <h1 id="storefront-title">Controle e proteção para sua operação industrial.</h1>
+          <p>Painéis para partida, acionamento e automação, dimensionados conforme a carga e as condições da sua aplicação.</p>
+          <div className="storefront-hero__specs"><span>Partida de motores</span><span>Proteção elétrica</span><span>Automação industrial</span></div>
+          <div className="storefront-hero__actions"><ButtonLink to="/produtos">Conheça os produtos</ButtonLink><ButtonLink to="/contato" variant="secondary">Falar com especialista</ButtonLink></div>
         </div>
         <Link className="storefront-hero__product" to="/produtos/painel-estrela-triangulo" aria-label="Conhecer o Painel Estrela-Triângulo">
-          <video autoPlay loop muted playsInline preload="auto" poster="/images/hero-painel-comando-poster.jpg" aria-hidden="true">
-            <source src="/videos/hero-painel-comando.mp4" type="video/mp4" />
-          </video>
-          <span className="storefront-hero__badge"><small>Destaque</small><strong>Painel Estrela-Triângulo</strong><b>Conhecer produto →</b></span>
+          <span className="storefront-hero__arc storefront-hero__arc--one"/><span className="storefront-hero__arc storefront-hero__arc--two"/><span className="storefront-hero__arc storefront-hero__arc--three"/>
+          <img src="/images/hero-painel-cutout.png" alt="Painel elétrico industrial em gabinete fechado" />
+          <span className="storefront-hero__badge"><small>Em destaque</small><strong>Painel Estrela-Triângulo</strong></span>
         </Link>
       </div>
     </section>

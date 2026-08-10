@@ -2,17 +2,10 @@ import { FormEvent, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { companyConfig } from '../../constants/company';
 
-const categories = [
-  ['/produtos/painel-estrela-triangulo', 'Estrela-triângulo'],
-  ['/produtos?categoria=soft-starter', 'Soft starter'],
-  ['/produtos?categoria=inversor-de-frequencia', 'Inversor de frequência'],
-  ['/produtos?categoria=bombas', 'Painéis para bombas'],
-  ['/produtos?categoria=automacao', 'Automação industrial'],
-];
-
-const institutionalLinks = [
-  ['/empresa', 'A empresa'],
-  ['/servicos', 'Serviços'],
+const navigation = [
+  ['/', 'Início'],
+  ['/produtos', 'Produtos'],
+  ['/segmentos', 'Aplicações'],
   ['/projetos', 'Projetos'],
   ['/blog', 'Conteúdo técnico'],
   ['/contato', 'Contato'],
@@ -31,15 +24,6 @@ export function PublicLayout() {
   };
 
   return <>
-    <div className="commerce-topbar">
-      <div className="container commerce-topbar__inner">
-        <span>Painéis elétricos, acionamentos e automação industrial</span>
-        <nav aria-label="Navegação institucional">
-          {institutionalLinks.map(([to, label]) => <NavLink key={to} to={to}>{label}</NavLink>)}
-        </nav>
-      </div>
-    </div>
-
     <header className="header commerce-header">
       <div className="container commerce-header__main">
         <NavLink to="/" className="commerce-brand" aria-label={`${companyConfig.name}, página inicial`}>
@@ -50,7 +34,7 @@ export function PublicLayout() {
         <form className="commerce-search" role="search" onSubmit={submitSearch}>
           <label className="sr-only" htmlFor="store-search">Buscar no catálogo</label>
           <input id="store-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Qual painel ou componente você procura?" />
-          <button type="submit">Buscar</button>
+          <button type="submit" aria-label="Buscar"><span aria-hidden="true">⌕</span></button>
         </form>
 
         <div className="commerce-actions">
@@ -63,10 +47,9 @@ export function PublicLayout() {
         <button className="menu-button" type="button" aria-expanded={open} aria-controls="store-menu" onClick={() => setOpen(!open)}>Menu</button>
       </div>
 
-      <nav id="store-menu" className={open ? 'category-nav category-nav--open' : 'category-nav'} aria-label="Categorias de produtos">
+      <nav id="store-menu" className={open ? 'category-nav category-nav--open' : 'category-nav'} aria-label="Navegação principal">
         <div className="container category-nav__inner">
-          {categories.map(([to, label]) => <NavLink end key={to} to={to} onClick={() => setOpen(false)}>{label}</NavLink>)}
-          <NavLink end className="category-nav__all" to="/produtos" onClick={() => setOpen(false)}>Todos os produtos <span aria-hidden="true">→</span></NavLink>
+          {navigation.map(([to, label]) => <NavLink end key={to} to={to} onClick={() => setOpen(false)} className={({ isActive }) => `${to === '/produtos' ? 'category-nav__products' : ''}${isActive ? ' active' : ''}`.trim()}>{label}{to === '/produtos' && <span aria-hidden="true">⌄</span>}</NavLink>)}
         </div>
       </nav>
     </header>
