@@ -23,7 +23,16 @@ export default function HomePage() {
   return <>
     <section className="hero-v3">
       <div className="hero-v3__media">
-        <img src="/images/hero-painel-industrial-v2.jpg" alt="Painel elétrico industrial aberto em ambiente de engenharia" fetchPriority="high" />
+        <video
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          poster="/images/hero-painel-comando-poster.jpg"
+          aria-hidden="true"
+        >
+          <source src="/videos/hero-painel-comando.mp4" type="video/mp4" />
+        </video>
         <span className="hero-v3__scan" />
       </div>
       <div className="container hero-v3__content">
