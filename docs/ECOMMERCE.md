@@ -1,4 +1,6 @@
-# Arquitetura do e-commerce MR Drives
+# Arquitetura do e-commerce Painel de Comando
+
+O nome do site e da operação digital é **Painel de Comando**. A **MR Drives** aparece como empresa responsável e chancela institucional da loja.
 
 ## Estratégia comercial
 
@@ -44,7 +46,7 @@ Cada produto deve declarar seu modo de venda. A interface nunca deve exibir pre�
 
 ## Fases
 
-1. Identidade MR Drives, navegação comercial, busca e páginas de produto.
+1. Identidade Painel de Comando com chancela MR Drives, navegação comercial, busca e páginas de produto.
 2. Administração de SKUs, preços, estoque e imagens.
 3. Carrinho persistente e identificação do cliente.
 4. Frete, pagamento, pedidos e notificações.

@@ -11,7 +11,7 @@ const categories = [
 ];
 
 const institutionalLinks = [
-  ['/empresa', 'A MR Drives'],
+  ['/empresa', 'A empresa'],
   ['/servicos', 'Serviços'],
   ['/projetos', 'Projetos'],
   ['/blog', 'Conteúdo técnico'],
@@ -44,6 +44,7 @@ export function PublicLayout() {
       <div className="container commerce-header__main">
         <NavLink to="/" className="commerce-brand" aria-label={`${companyConfig.name}, página inicial`}>
           <img src="/brand/mr-drives-logo.png" alt="MR Drives" />
+          <span><strong>Painel de Comando</strong><small>uma loja MR Drives</small></span>
         </NavLink>
 
         <form className="commerce-search" role="search" onSubmit={submitSearch}>
@@ -80,6 +81,6 @@ export function PublicLayout() {
 
     <main id="conteudo"><Outlet /></main>
 
-    <footer className="footer"><div className="container footer__grid"><div className="footer__brand"><img src="/brand/mr-drives-logo.png" alt="MR Drives"/><p>Painéis elétricos, acionamentos e soluções de automação para aplicações industriais.</p></div><div><strong>Navegue</strong><p><NavLink to="/produtos">Produtos</NavLink><br/><NavLink to="/empresa">A MR Drives</NavLink><br/><NavLink to="/contato">Contato</NavLink></p></div><div><strong>Atendimento</strong><p>{companyConfig.phone}<br/>{companyConfig.email}<br/>{companyConfig.address}</p></div></div><div className="container footer__bottom"><span>© {new Date().getFullYear()} {companyConfig.name}</span><span><NavLink to="/politica-de-privacidade">Privacidade</NavLink> · <NavLink to="/termos-de-uso">Termos</NavLink> · <NavLink to="/admin/login">Área administrativa</NavLink></span></div></footer>
+    <footer className="footer"><div className="container footer__grid"><div className="footer__brand"><div><img src="/brand/mr-drives-logo.png" alt="MR Drives"/><span><strong>Painel de Comando</strong><small>uma loja MR Drives</small></span></div><p>Painéis elétricos, acionamentos e soluções de automação para aplicações industriais.</p></div><div><strong>Navegue</strong><p><NavLink to="/produtos">Produtos</NavLink><br/><NavLink to="/empresa">A empresa</NavLink><br/><NavLink to="/contato">Contato</NavLink></p></div><div><strong>Atendimento</strong><p>{companyConfig.phone}<br/>{companyConfig.email}<br/>{companyConfig.address}</p></div></div><div className="container footer__bottom"><span>© {new Date().getFullYear()} {companyConfig.name} · MR Drives</span><span><NavLink to="/politica-de-privacidade">Privacidade</NavLink> · <NavLink to="/termos-de-uso">Termos</NavLink> · <NavLink to="/admin/login">Área administrativa</NavLink></span></div></footer>
   </>;
 }

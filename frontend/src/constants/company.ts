@@ -1,6 +1,6 @@
 export const companyConfig = {
-  name: 'MR Drives',
-  shortName: 'MR',
+  name: 'Painel de Comando',
+  shortName: 'PC',
   phone: 'TELEFONE A CONFIGURAR',
   whatsapp: '5500000000000',
   whatsappLabel: 'WHATSAPP A CONFIGURAR',
