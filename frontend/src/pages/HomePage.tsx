@@ -21,27 +21,25 @@ const applications = ['Bombas', 'Compressores', 'Ventiladores', 'Irrigação', '
 
 export default function HomePage() {
   return <div className="shop-home">
-    <section className="shop-hero" aria-label="Destaques da loja">
-      <div className="container shop-hero__grid">
-        <article className="shop-hero__main">
+    <section className="storefront-hero" aria-labelledby="storefront-title">
+      <div className="container storefront-hero__grid">
+        <div className="storefront-hero__content">
+          <span>Painel de Comando · Loja técnica industrial</span>
+          <h1 id="storefront-title">Painéis elétricos para quem não pode parar.</h1>
+          <p>Encontre soluções para partida, proteção e controle de motores, com especificação clara e suporte antes da compra.</p>
+          <div className="storefront-hero__actions"><ButtonLink to="/produtos">Explorar o catálogo</ButtonLink><ButtonLink to="/orcamento" variant="secondary">Configurar um painel</ButtonLink></div>
+          <div className="storefront-hero__meta"><span><strong>Compra assistida</strong>Escolha com apoio técnico</span><span><strong>Projeto sob medida</strong>Cotação conforme a aplicação</span></div>
+        </div>
+        <Link className="storefront-hero__product" to="/produtos/painel-estrela-triangulo" aria-label="Conhecer o Painel Estrela-Triângulo">
           <video autoPlay loop muted playsInline preload="auto" poster="/images/hero-painel-comando-poster.jpg" aria-hidden="true">
             <source src="/videos/hero-painel-comando.mp4" type="video/mp4" />
           </video>
-          <div className="shop-hero__overlay" />
-          <div className="shop-hero__content">
-            <span>Solução em destaque</span>
-            <h1>Painel Estrela-Triângulo</h1>
-            <p>Partida segura para motores industriais, dimensionada para sua aplicação.</p>
-            <ButtonLink to="/produtos/painel-estrela-triangulo">Conhecer o produto</ButtonLink>
-          </div>
-        </article>
-
-        <div className="shop-hero__offers">
-          <article className="shop-offer shop-offer--primary"><span>Projeto especial?</span><h2>Monte o painel certo para sua operação.</h2><p>Envie os dados da carga e receba uma análise técnica.</p><Link to="/orcamento">Solicitar cotação <span aria-hidden="true">→</span></Link></article>
-          <article className="shop-offer shop-offer--secondary"><span>Precisa escolher?</span><h2>Conte com atendimento técnico antes da compra.</h2><Link to="/contato">Falar com especialista <span aria-hidden="true">→</span></Link></article>
-        </div>
+          <span className="storefront-hero__badge"><small>Destaque</small><strong>Painel Estrela-Triângulo</strong><b>Conhecer produto →</b></span>
+        </Link>
       </div>
     </section>
+
+    <aside className="storefront-benefits" aria-label="Diferenciais da loja"><div className="container storefront-benefits__inner"><div><span>01</span><p><strong>Escolha orientada</strong>Atendimento antes da compra</p></div><div><span>02</span><p><strong>Engenharia aplicada</strong>Produto adequado à carga</p></div><div><span>03</span><p><strong>Documentação clara</strong>Especificação sem surpresa</p></div><div><span>04</span><p><strong>Soluções sob medida</strong>Cotação para projetos especiais</p></div></div></aside>
 
     <section className="shop-categories" aria-labelledby="categories-title">
       <div className="container">
