@@ -63,8 +63,8 @@ export function PublicLayout() {
 
       <nav id="store-menu" className={open ? 'category-nav category-nav--open' : 'category-nav'} aria-label="Categorias de produtos">
         <div className="container category-nav__inner">
-          {categories.map(([to, label]) => <NavLink key={to} to={to} onClick={() => setOpen(false)}>{label}</NavLink>)}
-          <NavLink className="category-nav__all" to="/produtos" onClick={() => setOpen(false)}>Todos os produtos <span aria-hidden="true">→</span></NavLink>
+          {categories.map(([to, label]) => <NavLink end key={to} to={to} onClick={() => setOpen(false)}>{label}</NavLink>)}
+          <NavLink end className="category-nav__all" to="/produtos" onClick={() => setOpen(false)}>Todos os produtos <span aria-hidden="true">→</span></NavLink>
         </div>
       </nav>
     </header>

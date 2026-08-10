@@ -34,13 +34,48 @@ function StorefrontListing({ copy }: { copy: { eyebrow: string; title: string; b
 }
 
 function StarDeltaProduct() {
+  const [media, setMedia] = useState<'video' | 'closed' | 'open'>('video');
   const applications = ['Bombas industriais', 'Compressores', 'Ventiladores', 'Máquinas de médio e grande porte'];
   const benefits = ['Redução da corrente de partida', 'Menor impacto na rede elétrica', 'Maior vida útil do motor', 'Proteção contra sobrecarga', 'Operação segura e confiável'];
   return <>
-    <div className="product-breadcrumb"><div className="container"><Link to="/">Início</Link><span>/</span><Link to="/produtos">Painéis de partida</Link><span>/</span><strong>Painel Estrela-Triângulo</strong></div></div>
-    <section className="product-detail"><div className="container product-detail__grid">
-      <div className="product-gallery"><div className="product-gallery__stage"><img src="/images/hero-painel-comando-poster.jpg" alt="Painel Estrela-Triângulo em gabinete industrial fechado"/></div><div className="product-gallery__note"><span>Imagem de referência</span><p>A disposição e os componentes variam conforme o dimensionamento do projeto.</p></div></div>
-      <div className="product-summary"><span className="product-summary__category">Painéis de partida</span><h1>Painel Estrela-Triângulo</h1><p className="product-summary__lead">Partida de motores elétricos com corrente reduzida, proteção adequada e menor impacto na rede.</p><div className="product-summary__status"><span>Configuração sob medida</span><strong>Preço sob consulta</strong><small>O valor depende de potência, tensão, proteções e opcionais.</small></div><div className="product-specs"><div><small>Tensão</small><strong>Conforme o projeto</strong></div><div><small>Potência</small><strong>Dimensionada para o motor</strong></div><div><small>Acionamento</small><strong>Estrela-triângulo</strong></div><div><small>Aplicação</small><strong>Uso industrial</strong></div></div><div className="product-summary__actions"><ButtonLink to="/orcamento?interesse=painel-estrela-triangulo">Solicitar cotação</ButtonLink><ButtonLink to="/contato" variant="secondary">Tirar dúvida técnica</ButtonLink></div><p className="product-summary__assurance">Antes da fabricação, a equipe confirma os dados do motor e as condições da instalação.</p></div>
+    <div className="product-breadcrumb"><div className="container"><Link to="/">Início</Link><span>/</span><Link to="/produtos">Produtos</Link><span>/</span><Link to="/produtos?categoria=paineis-de-partida">Painéis de partida</Link><span>/</span><strong>Estrela-Triângulo</strong></div></div>
+    <section className="product-detail"><div className="container">
+      <div className="product-detail__grid">
+        <div className="product-gallery">
+          <div className="product-gallery__layout">
+            <div className="product-gallery__thumbs" aria-label="Mídia do produto">
+              <button type="button" className={media === 'video' ? 'active' : ''} aria-pressed={media === 'video'} onClick={() => setMedia('video')}><img src="/images/hero-painel-comando-poster.jpg" alt=""/><span>Vídeo</span></button>
+              <button type="button" className={media === 'closed' ? 'active' : ''} aria-pressed={media === 'closed'} onClick={() => setMedia('closed')}><img src="/images/hero-painel-comando-poster.jpg" alt=""/><span>Fechado</span></button>
+              <button type="button" className={media === 'open' ? 'active' : ''} aria-pressed={media === 'open'} onClick={() => setMedia('open')}><img src="/images/hero-painel-industrial-v2.jpg" alt=""/><span>Interior</span></button>
+            </div>
+            <div className="product-gallery__stage">
+              {media === 'video' && <video autoPlay loop muted playsInline poster="/images/hero-painel-comando-poster.jpg" aria-label="Demonstração do gabinete abrindo"><source src="/videos/hero-painel-comando.mp4" type="video/mp4"/></video>}
+              {media === 'closed' && <img src="/images/hero-painel-comando-poster.jpg" alt="Painel Estrela-Triângulo em gabinete industrial fechado"/>}
+              {media === 'open' && <img src="/images/hero-painel-industrial-v2.jpg" alt="Interior de painel elétrico industrial organizado"/>}
+              <span className="product-gallery__zoom">Imagem ilustrativa</span>
+            </div>
+          </div>
+          <div className="product-gallery__note"><span>Projeto configurável</span><p>A disposição interna, as dimensões e os componentes são definidos conforme motor, tensão e aplicação.</p></div>
+        </div>
+
+        <div className="product-summary">
+          <div className="product-summary__topline"><span className="product-summary__category">Painéis de partida</span><span>Fabricação sob configuração</span></div>
+          <h1>Painel de Partida Estrela-Triângulo</h1>
+          <p className="product-summary__lead">Acionamento de motores com redução da corrente de partida, proteção da carga e menor impacto na rede elétrica.</p>
+          <div className="product-summary__highlights"><span>Partida com corrente reduzida</span><span>Proteção contra sobrecarga</span><span>Dimensionamento técnico</span></div>
+
+          <div className="product-buybox">
+            <div className="product-buybox__price"><span>Valor do equipamento</span><strong>Preço sob consulta</strong><small>Calculado conforme potência, tensão, proteções e opcionais.</small></div>
+            <div className="product-buybox__specs"><div><small>Tensão</small><strong>Definida na cotação</strong></div><div><small>Potência do motor</small><strong>Dimensionada no projeto</strong></div><div><small>Quantidade</small><strong>Informada na solicitação</strong></div></div>
+            <ButtonLink to="/orcamento?interesse=painel-estrela-triangulo">Configurar e solicitar cotação</ButtonLink>
+            <Link className="product-buybox__help" to="/contato">Precisa de ajuda para dimensionar? <strong>Fale com um especialista →</strong></Link>
+          </div>
+
+          <div className="product-summary__services"><div><span>01</span><p><strong>Análise técnica</strong>Conferência dos dados antes da proposta</p></div><div><span>02</span><p><strong>Proposta detalhada</strong>Escopo e configuração documentados</p></div><div><span>03</span><p><strong>Suporte especializado</strong>Acompanhamento comercial e técnico</p></div></div>
+        </div>
+      </div>
+
+      <div className="product-quick-specs" aria-label="Resumo técnico"><div><small>Tipo de partida</small><strong>Estrela-Triângulo</strong></div><div><small>Construção</small><strong>Sob medida</strong></div><div><small>Instalação</small><strong>Uso industrial</strong></div><div><small>Proteção</small><strong>Conforme dimensionamento</strong></div></div>
     </div></section>
     <section className="product-information"><div className="container product-information__grid"><div><span className="eyebrow">Sobre a solução</span><h2>Partida controlada para preservar motor e instalação.</h2><p>O painel realiza a partida do motor inicialmente em estrela e, após o tempo configurado, faz a transição para triângulo. Essa estratégia reduz a corrente durante a partida e contribui para uma operação mais estável.</p></div><div><article><h3>Aplicações</h3><ul>{applications.map(item => <li key={item}>{item}</li>)}</ul></article><article><h3>Vantagens</h3><ul>{benefits.map(item => <li key={item}>{item}</li>)}</ul></article></div></div></section>
   </>;
