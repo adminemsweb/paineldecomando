@@ -25,6 +25,7 @@ export default function HomePage() {
       <div className="hero-v3__media">
         <video
           autoPlay
+          loop
           muted
           playsInline
           preload="auto"
