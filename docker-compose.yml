@@ -1,0 +1,55 @@
+services:
+  frontend:
+    build: ./docker/frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - api
+
+  api:
+    build: ./docker/backend
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8080:80"
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      FRONTEND_URL: http://localhost:5173
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: industrial_site
+      DB_USERNAME: industrial
+      DB_PASSWORD: change_me
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: industrial_site
+      MARIADB_USER: industrial
+      MARIADB_PASSWORD: change_me
+      MARIADB_ROOT_PASSWORD: change_root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - database_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  database_data:
+

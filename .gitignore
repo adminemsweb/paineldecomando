@@ -1,0 +1,10 @@
+node_modules/
+frontend/dist/
+backend/vendor/
+*.log
+.env
+backend/.env
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+backend/storage/logs/*
+!backend/storage/logs/.gitkeep

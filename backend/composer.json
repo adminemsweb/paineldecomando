@@ -1,0 +1,8 @@
+{
+  "name": "industrial/site-api",
+  "description": "API REST do site industrial",
+  "type": "project",
+  "require": { "php": ">=8.2", "ext-pdo": "*", "ext-fileinfo": "*" },
+  "autoload": { "psr-4": { "App\\": "src/" } }
+}
+
