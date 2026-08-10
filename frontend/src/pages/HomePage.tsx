@@ -24,15 +24,15 @@ export default function HomePage() {
     <section className="storefront-hero" aria-labelledby="storefront-title">
       <div className="container storefront-hero__grid">
         <div className="storefront-hero__content">
-          <span>Linha de painéis elétricos · projetos sob medida</span>
-          <h1 id="storefront-title">Controle e proteção para sua operação industrial.</h1>
-          <p>Painéis para partida, acionamento e automação, dimensionados conforme a carga e as condições da sua aplicação.</p>
+          <span>E-commerce técnico · painéis e automação industrial</span>
+          <h1 id="storefront-title">O painel certo para sua operação industrial.</h1>
+          <p>Compre painéis para partida, acionamento e automação com orientação técnica, ou solicite uma configuração dimensionada para sua aplicação.</p>
           <div className="storefront-hero__specs"><span>Partida de motores</span><span>Proteção elétrica</span><span>Automação industrial</span></div>
-          <div className="storefront-hero__actions"><ButtonLink to="/produtos">Conheça os produtos</ButtonLink><ButtonLink to="/contato" variant="secondary">Falar com especialista</ButtonLink></div>
+          <div className="storefront-hero__actions"><ButtonLink to="/produtos">Comprar painéis</ButtonLink><ButtonLink to="/orcamento" variant="secondary">Montar meu projeto</ButtonLink></div>
         </div>
         <Link className="storefront-hero__product" to="/produtos/painel-estrela-triangulo" aria-label="Conhecer o Painel Estrela-Triângulo">
           <span className="storefront-hero__arc storefront-hero__arc--one"/><span className="storefront-hero__arc storefront-hero__arc--two"/><span className="storefront-hero__arc storefront-hero__arc--three"/>
-          <img src="/images/hero-painel-cutout.png" alt="Painel elétrico industrial em gabinete fechado" />
+          <img src="/images/logopc.png" alt="Painel elétrico industrial em gabinete fechado" />
           <span className="storefront-hero__badge"><small>Em destaque</small><strong>Painel Estrela-Triângulo</strong></span>
         </Link>
       </div>

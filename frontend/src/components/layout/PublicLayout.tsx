@@ -4,7 +4,7 @@ import { companyConfig } from '../../constants/company';
 
 const navigation = [
   ['/', 'Início'],
-  ['/produtos', 'Produtos'],
+  ['/produtos', 'Comprar painéis'],
   ['/segmentos', 'Aplicações'],
   ['/projetos', 'Projetos'],
   ['/blog', 'Conteúdo técnico'],
@@ -27,8 +27,8 @@ export function PublicLayout() {
     <header className="header commerce-header">
       <div className="container commerce-header__main">
         <NavLink to="/" className="commerce-brand" aria-label={`${companyConfig.name}, página inicial`}>
-          <img src="/brand/painel-de-comando-logo.png" alt="" />
-          <span><strong>Painel de Comando</strong><small>Loja técnica industrial</small></span>
+          <span className="commerce-brand__mark"><img src="/images/logopc.png" alt="" /></span>
+          <span className="commerce-brand__name"><strong>Painel de Comando</strong><small>E-commerce industrial</small></span>
         </NavLink>
 
         <form className="commerce-search" role="search" onSubmit={submitSearch}>
@@ -41,7 +41,7 @@ export function PublicLayout() {
           <NavLink to="/contato"><small>Precisa de ajuda?</small><strong>Atendimento técnico</strong></NavLink>
           <NavLink to="/orcamento"><small>Projeto especial</small><strong>Solicitar orçamento</strong></NavLink>
           <NavLink className="commerce-cart" to="/carrinho" aria-label="Carrinho com zero itens"><span aria-hidden="true">0</span><strong>Carrinho</strong></NavLink>
-          <div className="commerce-owner"><small>Uma empresa</small><img src="/brand/mr-drives-logo.png" alt="MR Drives"/></div>
+          <div className="commerce-owner"><small>Parceiro técnico</small><img src="/brand/mr-drives-logo.png" alt="MR Drives"/></div>
         </div>
 
         <button className="menu-button" type="button" aria-expanded={open} aria-controls="store-menu" onClick={() => setOpen(!open)}>Menu</button>
@@ -56,6 +56,6 @@ export function PublicLayout() {
 
     <main id="conteudo"><Outlet /></main>
 
-    <footer className="footer"><div className="container footer__grid"><div className="footer__brand"><div><img src="/brand/painel-de-comando-logo.png" alt=""/><span><strong>Painel de Comando</strong><small>Loja técnica industrial</small></span></div><p>Painéis elétricos, acionamentos e soluções de automação para aplicações industriais.</p><div className="footer__owner"><span>Uma empresa</span><img src="/brand/mr-drives-logo.png" alt="MR Drives"/></div></div><div><strong>Navegue</strong><p><NavLink to="/produtos">Produtos</NavLink><br/><NavLink to="/empresa">A empresa</NavLink><br/><NavLink to="/contato">Contato</NavLink></p></div><div><strong>Atendimento</strong><p>{companyConfig.phone}<br/>{companyConfig.email}<br/>{companyConfig.address}</p></div></div><div className="container footer__bottom"><span>© {new Date().getFullYear()} {companyConfig.name} · MR Drives</span><span><NavLink to="/politica-de-privacidade">Privacidade</NavLink> · <NavLink to="/termos-de-uso">Termos</NavLink> · <NavLink to="/admin/login">Área administrativa</NavLink></span></div></footer>
+    <footer className="footer"><div className="container footer__grid"><div className="footer__brand"><div><span className="footer__brand-mark"><img src="/images/logopc.png" alt=""/></span><span><strong>Painel de Comando</strong><small>E-commerce industrial</small></span></div><p>Compra de painéis elétricos, acionamentos, componentes e soluções de automação para aplicações industriais.</p><div className="footer__owner"><span>Em parceria com</span><img src="/brand/mr-drives-logo.png" alt="MR Drives"/></div></div><div><strong>Compre online</strong><p><NavLink to="/produtos">Todos os produtos</NavLink><br/><NavLink to="/segmentos">Aplicações</NavLink><br/><NavLink to="/carrinho">Meu carrinho</NavLink></p></div><div><strong>Atendimento</strong><p>{companyConfig.phone}<br/>{companyConfig.email}<br/>{companyConfig.address}</p></div></div><div className="container footer__bottom"><span>© {new Date().getFullYear()} {companyConfig.name} · E-commerce em parceria com a MR Drives</span><span><NavLink to="/politica-de-privacidade">Privacidade</NavLink> · <NavLink to="/termos-de-uso">Termos</NavLink> · <NavLink to="/admin/login">Área administrativa</NavLink></span></div></footer>
   </>;
 }
