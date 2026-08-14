@@ -10,6 +10,9 @@ final class Response
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
+        header('X-Request-ID: ' . RequestContext::id());
+        $payload['request_id'] ??= RequestContext::id();
+        if ($status === 204) exit;
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         exit;
     }
@@ -27,4 +30,3 @@ final class Response
         self::json(['success' => false, 'data' => null, 'message' => $message, 'errors' => $errors], $status);
     }
 }
-

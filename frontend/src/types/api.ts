@@ -4,6 +4,7 @@ export interface ApiResponse<T> {
   message?: string;
   meta?: { page: number; per_page: number; total: number; total_pages: number };
   errors?: Record<string, string[]>;
+  request_id?: string;
 }
 
 export interface Product {
@@ -15,4 +16,3 @@ export interface Product {
   applications?: string[];
   image_url?: string;
 }
-

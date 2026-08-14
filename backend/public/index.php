@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use App\Config\Env;
-use App\Core\Response;
+use App\Core\ErrorHandler;
 use App\Core\Router;
 use App\Middleware\Cors;
 
@@ -15,14 +15,11 @@ spl_autoload_register(static function (string $class): void {
     if (is_file($file)) require $file;
 });
 
+Env::load(dirname(BASE_PATH) . '/.env');
 Env::load(BASE_PATH . '/.env');
 date_default_timezone_set('America/Sao_Paulo');
 
-set_exception_handler(static function (Throwable $exception): never {
-    error_log($exception->__toString());
-    $message = Env::bool('APP_DEBUG') ? $exception->getMessage() : 'Ocorreu um erro interno.';
-    Response::error($message, 500);
-});
+ErrorHandler::register();
 
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');

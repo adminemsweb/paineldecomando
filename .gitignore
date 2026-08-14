@@ -3,8 +3,13 @@ frontend/dist/
 backend/vendor/
 *.log
 .env
+.env.production
+frontend/.env
+frontend/.env.local
+frontend/.env.production
 backend/.env
 backend/public/uploads/*
 !backend/public/uploads/.gitkeep
 backend/storage/logs/*
 !backend/storage/logs/.gitkeep
+tmp/

@@ -1,0 +1,119 @@
+name: Testes e deploy em produção
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: paineldecomando-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+  PHP_VERSION: "8.3"
+  VITE_API_URL: /api/v1
+  VITE_COMPANY_NAME: Painel de Comando
+  VITE_COMPANY_SHORT_NAME: PDC
+  VITE_COMPANY_LEGAL_NAME: SMARTFLOW TECNOLOGIA EIRELI
+  VITE_COMPANY_CNPJ: 19.252.656/0001-20
+  VITE_COMPANY_PHONE: +55 11 92104-7460
+  VITE_COMPANY_WHATSAPP: "5511921047460"
+  VITE_COMPANY_WHATSAPP_LABEL: +55 11 92104-7460
+  VITE_COMPANY_EMAIL: contato@paineldecomando.com.br
+  VITE_COMPANY_ADDRESS: Rua Cabreúva, Sorocaba - SP, CEP 18085-340
+  VITE_COMPANY_HOURS: Atendimento em horário comercial
+  VITE_COMPANY_DELIVERY_NOTICE: Entregas exclusivamente em território brasileiro.
+
+jobs:
+  quality:
+    name: Qualidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Validar frontend
+        working-directory: frontend
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+          npm audit --audit-level=high
+          npm run build:prod
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo_mysql, curl, fileinfo
+          coverage: none
+
+      - name: Validar backend
+        run: |
+          find backend -name '*.php' -print0 | xargs -0 -n1 php -l
+          php backend/tests/run.php
+
+      - name: Validar stack de produção
+        run: docker compose --env-file .env.production.example -f docker-stack.prod.yml config --quiet
+
+  deploy:
+    name: Publicar no servidor
+    if: github.event_name != 'pull_request'
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - name: Baixar código validado
+        uses: actions/checkout@v4
+
+      - name: Preparar acesso SSH
+        env:
+          PRODUCTION_SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+          PRODUCTION_KNOWN_HOSTS: ${{ secrets.PRODUCTION_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$PRODUCTION_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$PRODUCTION_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+
+      - name: Empacotar release
+        run: |
+          tar \
+            --exclude=.git \
+            --exclude=frontend/node_modules \
+            --exclude=frontend/dist \
+            --exclude=tmp \
+            --exclude=.env \
+            --exclude=.env.production \
+            -czf /tmp/paineldecomando-source.tar.gz .
+
+      - name: Enviar e ativar release
+        env:
+          PRODUCTION_HOST: ${{ vars.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ vars.PRODUCTION_USER }}
+          PRODUCTION_PATH: ${{ vars.PRODUCTION_PATH }}
+        run: |
+          release_dir="${PRODUCTION_PATH}/releases/${GITHUB_SHA}"
+          ssh "${PRODUCTION_USER}@${PRODUCTION_HOST}" "mkdir -p '${release_dir}'"
+          scp /tmp/paineldecomando-source.tar.gz "${PRODUCTION_USER}@${PRODUCTION_HOST}:${release_dir}/source.tar.gz"
+          ssh "${PRODUCTION_USER}@${PRODUCTION_HOST}" \
+            "cd '${release_dir}' && tar -xzf source.tar.gz && rm source.tar.gz && chmod 755 scripts/deploy-production.sh && scripts/deploy-production.sh '${GITHUB_SHA}'"

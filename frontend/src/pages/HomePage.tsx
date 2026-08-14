@@ -1,13 +1,14 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ButtonLink } from '../components/common/ButtonLink';
+import { Icon } from '../components/common/Icon';
+import { companyConfig } from '../constants/company';
 
-const categories = [
-  { code: 'ET', title: 'Estrela-triângulo', detail: 'Partida com corrente reduzida', to: '/produtos/painel-estrela-triangulo' },
-  { code: 'SS', title: 'Soft starter', detail: 'Partida e parada controladas', to: '/produtos?categoria=soft-starter' },
-  { code: 'VF', title: 'Inversor de frequência', detail: 'Controle de velocidade', to: '/produtos?categoria=inversor-de-frequencia' },
-  { code: 'PB', title: 'Painéis para bombas', detail: 'Controle e proteção de sistemas', to: '/produtos?categoria=bombas' },
-  { code: 'CCM', title: 'Centro de controle', detail: 'Distribuição e acionamentos', to: '/produtos?categoria=ccm' },
-  { code: 'AU', title: 'Automação', detail: 'CLP, IHM e integração', to: '/produtos?categoria=automacao' },
+const popularProducts = [
+  { code: '01', title: 'Painéis elétricos', detail: 'Comando e proteção industrial', to: '/produtos?categoria=paineis' },
+  { code: '02', title: 'Inversores de frequência', detail: 'Controle de velocidade e processo', to: '/produtos?categoria=inversor-de-frequencia' },
+  { code: '03', title: 'Motores elétricos', detail: 'Soluções para diferentes aplicações', to: '/produtos?categoria=motores' },
+  { code: '04', title: 'Soft starters', detail: 'Partidas e paradas controladas', to: '/produtos?categoria=soft-starter' },
 ];
 
 const products = [
@@ -19,31 +20,92 @@ const products = [
 
 const applications = ['Bombas', 'Compressores', 'Ventiladores', 'Irrigação', 'Saneamento', 'Máquinas industriais'];
 
+const testimonials = [
+  { name: 'Marcos P.', area: 'Saneamento', text: 'Instalamos em bomba e o controle ficou muito mais estável.' },
+  { name: 'Juliana R.', area: 'Automação', text: 'Boa resposta no orçamento e explicação clara sobre tensão e aplicação.' },
+  { name: 'Eduardo L.', area: 'Integrador', text: 'Produto robusto, visual profissional e entrega alinhada com o combinado.' },
+];
+
+const frequentlyAskedQuestions = [
+  { question: 'Qual é o prazo de entrega?', answer: 'O prazo depende do modelo, da configuração e da disponibilidade dos componentes. A previsão é confirmada no orçamento antes do fechamento do pedido.' },
+  { question: 'Os painéis podem ser instalados em áreas externas?', answer: 'Sim, desde que o grau de proteção, a ventilação e os materiais sejam especificados para o ambiente. Nossa equipe ajuda a definir a configuração adequada.' },
+  { question: 'Preciso trocar meu motor atual?', answer: 'Nem sempre. Avaliamos potência, tensão, corrente, regime de trabalho e aplicação para verificar a compatibilidade do motor com o painel ou acionamento.' },
+  { question: 'Quais aplicações são recomendadas?', answer: 'As soluções atendem bombas, compressores, ventiladores, irrigação, saneamento e diferentes máquinas industriais.' },
+  { question: 'Vocês fazem o dimensionamento técnico?', answer: 'Sim. Com os dados da carga e da instalação, a equipe orienta a seleção e prepara uma proposta compatível com a aplicação.' },
+];
+
+const heroSlides = [
+  {
+    theme: 'gray',
+    eyebrow: 'Painéis e automação industrial',
+    title: 'O painel certo para sua operação industrial.',
+    description: 'Compre painéis para partida, acionamento e automação com orientação técnica e configuração dimensionada para sua aplicação.',
+    tags: ['Partida de motores', 'Proteção elétrica', 'Automação industrial'],
+    image: '/images/logopc.png',
+    imageAlt: 'Painel elétrico industrial em gabinete fechado',
+    badge: 'Painel Estrela-Triângulo',
+    to: '/produtos/painel-estrela-triangulo',
+  },
+  {
+    theme: 'yellow',
+    eyebrow: 'Controle preciso e eficiência',
+    title: 'Mais controle para cada etapa do processo.',
+    description: 'Soluções com inversores de frequência para controlar velocidade, reduzir esforços mecânicos e adequar o motor à operação.',
+    tags: ['Controle de velocidade', 'Economia de energia', 'Maior vida útil'],
+    image: '/images/hero-painel-cutout.png',
+    imageAlt: 'Painel industrial com inversor de frequência',
+    badge: 'Inversor de Frequência',
+    to: '/produtos?categoria=inversor-de-frequencia',
+  },
+  {
+    theme: 'navy',
+    eyebrow: 'Engenharia sob medida',
+    title: 'Seu projeto começa com uma boa especificação.',
+    description: 'Conte com atendimento técnico para definir potência, tensão, proteções e recursos de comando antes de fechar seu pedido.',
+    tags: ['Projeto personalizado', 'Suporte técnico', 'Compra assistida'],
+    image: '/images/montagem-painel-industrial-v2.jpg',
+    imageAlt: 'Montagem técnica de painel elétrico industrial',
+    badge: 'Projeto Personalizado',
+    to: '/orcamento',
+  },
+];
+
 export default function HomePage() {
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveHeroSlide(current => (current + 1) % heroSlides.length);
+    }, 6500);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const heroSlide = heroSlides[activeHeroSlide];
+
   return <div className="shop-home">
-    <section className="storefront-hero" aria-labelledby="storefront-title">
-      <div className="container storefront-hero__grid">
+    <section className={`storefront-hero storefront-hero--${heroSlide.theme}`} aria-roledescription="carrossel" aria-label="Destaques de produtos">
+      <div className="container storefront-hero__grid" key={activeHeroSlide}>
         <div className="storefront-hero__content">
-          <span>E-commerce técnico · painéis e automação industrial</span>
-          <h1 id="storefront-title">O painel certo para sua operação industrial.</h1>
-          <p>Compre painéis para partida, acionamento e automação com orientação técnica, ou solicite uma configuração dimensionada para sua aplicação.</p>
-          <div className="storefront-hero__specs"><span>Partida de motores</span><span>Proteção elétrica</span><span>Automação industrial</span></div>
-          <div className="storefront-hero__actions"><ButtonLink to="/produtos">Comprar painéis</ButtonLink><ButtonLink to="/orcamento" variant="secondary">Montar meu projeto</ButtonLink></div>
+          <span>{heroSlide.eyebrow}</span>
+          <h1>{heroSlide.title}</h1>
+          <p>{heroSlide.description}</p>
+          <div className="storefront-hero__specs">{heroSlide.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
+          <div className="storefront-hero__actions"><ButtonLink to={heroSlide.to}>Ver solução</ButtonLink><ButtonLink to="/orcamento" variant="secondary">Montar meu projeto</ButtonLink></div>
         </div>
-        <Link className="storefront-hero__product" to="/produtos/painel-estrela-triangulo" aria-label="Conhecer o Painel Estrela-Triângulo">
+        <Link className="storefront-hero__product" to={heroSlide.to} aria-label={`Conhecer ${heroSlide.badge}`}>
           <span className="storefront-hero__arc storefront-hero__arc--one"/><span className="storefront-hero__arc storefront-hero__arc--two"/><span className="storefront-hero__arc storefront-hero__arc--three"/>
-          <img src="/images/logopc.png" alt="Painel elétrico industrial em gabinete fechado" />
-          <span className="storefront-hero__badge"><small>Em destaque</small><strong>Painel Estrela-Triângulo</strong></span>
+          <img src={heroSlide.image} alt={heroSlide.imageAlt} />
+          <span className="storefront-hero__badge"><small>Em destaque</small><strong>{heroSlide.badge}</strong></span>
         </Link>
       </div>
     </section>
 
-    <aside className="storefront-benefits" aria-label="Diferenciais da loja"><div className="container storefront-benefits__inner"><div><span>01</span><p><strong>Escolha orientada</strong>Atendimento antes da compra</p></div><div><span>02</span><p><strong>Engenharia aplicada</strong>Produto adequado à carga</p></div><div><span>03</span><p><strong>Documentação clara</strong>Especificação sem surpresa</p></div><div><span>04</span><p><strong>Soluções sob medida</strong>Cotação para projetos especiais</p></div></div></aside>
+    <aside className="storefront-benefits" aria-label="Benefícios da compra"><div className="container storefront-benefits__inner"><div><Icon name="truck" size={38}/><p><strong>Frete Grátis</strong><span>para o Sudeste</span></p></div><div><Icon name="discount" size={38}/><p><strong>Pague com Pix</strong><span>Desconto de 5% à vista</span></p></div><div><Icon name="creditCard" size={38}/><p><strong>Pague com Cartão</strong><span>Em até 3x sem juros</span></p></div><div><Icon name="shield" size={38}/><p><strong>Segurança</strong><span>Seus dados protegidos</span></p></div></div></aside>
 
-    <section className="shop-categories" aria-labelledby="categories-title">
+    <section className="shop-categories" aria-labelledby="popular-title">
       <div className="container">
-        <header className="shop-section-heading"><div><span>Compre por categoria</span><h2 id="categories-title">Encontre a solução pelo tipo de acionamento.</h2></div><Link to="/produtos">Ver todas as categorias <span aria-hidden="true">→</span></Link></header>
-        <div className="shop-category-grid">{categories.map(category => <Link to={category.to} key={category.code} className="shop-category-card"><span>{category.code}</span><div><strong>{category.title}</strong><small>{category.detail}</small></div><b aria-hidden="true">→</b></Link>)}</div>
+        <header className="shop-section-heading"><div><span>Mais buscados</span><h2 id="popular-title">Produtos mais procurados.</h2></div><Link to="/produtos">Ver todo o catálogo <span aria-hidden="true">→</span></Link></header>
+        <div className="shop-category-grid shop-category-grid--popular">{popularProducts.map(product => <Link to={product.to} key={product.code} className="shop-category-card"><span>{product.code}</span><div><strong>{product.title}</strong><small>{product.detail}</small></div><b aria-hidden="true">→</b></Link>)}</div>
       </div>
     </section>
 
@@ -64,6 +126,16 @@ export default function HomePage() {
       </div>
     </section>
 
-    <section className="shop-quote"><div className="container shop-quote__inner"><div><span>Compra assistida</span><h2>Não encontrou uma configuração pronta?</h2><p>Informe motor, tensão, potência e aplicação. A equipe prepara uma solução adequada ao seu projeto.</p></div><div><ButtonLink to="/orcamento">Solicitar cotação técnica</ButtonLink><Link to="/contato">Falar primeiro com a equipe</Link></div></div></section>
+    <section className="shop-testimonials" aria-labelledby="testimonials-title"><div className="container"><header className="shop-testimonials__heading"><span>Feedbacks de clientes</span><h2 id="testimonials-title">Experiências reais de quem compra soluções industriais.</h2><div className="shop-testimonials__rating"><strong>4,8</strong><span aria-label="5 estrelas">★★★★★</span><small>Avaliações de clientes</small></div></header><div className="shop-testimonials__grid">{testimonials.map(testimonial => <article className="testimonial-card" key={testimonial.name}><div className="testimonial-card__stars" aria-label="5 estrelas">★★★★★</div><div className="testimonial-card__person"><span aria-hidden="true">{testimonial.name.charAt(0)}</span><div><strong>{testimonial.name}</strong><small>{testimonial.area}</small></div></div><p>“{testimonial.text}”</p></article>)}</div><div className="shop-testimonials__pages" aria-hidden="true"><span/><span/><span className="active"/><span/><span/></div></div></section>
+
+    <section className="shop-faq" aria-labelledby="faq-title"><div className="container shop-faq__inner"><header><span>FAQ</span><h2 id="faq-title">Perguntas frequentes</h2><p>Tudo o que você precisa saber antes de definir o painel ideal para sua aplicação.</p></header><div className="shop-faq__list">{frequentlyAskedQuestions.map(item => <details key={item.question}><summary>{item.question}<span aria-hidden="true"/></summary><p>{item.answer}</p></details>)}</div></div></section>
+
+    <section className="shop-partner" aria-labelledby="partner-title">
+      <div className="container shop-partner__card">
+        <div className="shop-partner__brand"><span>Parceiros em destaque</span><div className="shop-partner__brand-logos"><img className="shop-partner__mr-logo" src="/brand/mr-drives-logo-transparent.png" alt="MR Drives"/><i aria-hidden="true"/><img className="shop-partner__metal-logo" src="/brand/metal-life-logo.png" alt="Metal Life"/></div></div>
+        <div className="shop-partner__content"><span>Em parceria com MR Drives e Metal Life</span><h2 id="partner-title">Motores e inversores com atendimento técnico.</h2><p>Encontre equipamentos para sua aplicação e conte com apoio para especificar, cotar e fechar a compra pelo WhatsApp.</p><div className="shop-partner__tags"><span>Motores elétricos</span><span>Inversores de frequência</span></div></div>
+        <div className="shop-partner__actions"><ButtonLink to="/produtos?parceiro=mr-drives">Ver produtos</ButtonLink><a href={`https://wa.me/${companyConfig.whatsapp}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={19}/> Falar no WhatsApp</a></div>
+      </div>
+    </section>
   </div>;
 }

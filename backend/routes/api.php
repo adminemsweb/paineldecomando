@@ -2,11 +2,13 @@
 declare(strict_types=1);
 
 use App\Controllers\ProductController;
+use App\Controllers\ShippingController;
 use App\Core\Request;
 use App\Core\Response;
 use App\Database\Connection;
 use App\Repositories\ProductRepository;
 use App\Services\LeadService;
+use App\Services\CorreiosService;
 use App\Validators\LeadValidator;
 
 $router->get('/api/v1/health', static fn() => Response::success(['service' => 'site-industrial-api', 'version' => '1.0.0'], 'API disponível.'));
@@ -31,8 +33,11 @@ $router->post('/api/v1/leads', static function (Request $request) {
     Response::success($result, 'Solicitação recebida com sucesso.', 201);
 });
 
+$router->post('/api/v1/shipping/quote', static function (Request $request) {
+    (new ShippingController(new CorreiosService()))->quote($request);
+});
+
 $router->post('/api/v1/contacts', static fn() => Response::error('Endpoint reservado para a Etapa 3.', 501));
 $router->post('/api/v1/auth/login', static fn() => Response::error('Autenticação será habilitada na Etapa 4.', 501));
 $router->post('/api/v1/auth/logout', static fn() => Response::success(null, 'Sessão encerrada.'));
 $router->post('/api/v1/auth/forgot-password', static fn() => Response::error('Recuperação será habilitada na Etapa 4.', 501));
-
