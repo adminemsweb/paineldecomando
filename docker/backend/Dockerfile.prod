@@ -1,0 +1,17 @@
+FROM php:8.3-apache
+RUN apt-get update && apt-get install -y --no-install-recommends libcurl4-openssl-dev \
+    && docker-php-ext-install pdo_mysql curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && a2enmod rewrite headers
+COPY docker/backend/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/backend/entrypoint.prod.sh /usr/local/bin/paineldecomando-entrypoint
+COPY backend/ /var/www/html/
+RUN mkdir -p storage/logs public/uploads \
+    && chown -R www-data:www-data storage public/uploads \
+    && sed -i 's/\r$//' /usr/local/bin/paineldecomando-entrypoint \
+    && chmod 755 /usr/local/bin/paineldecomando-entrypoint
+ENV APP_ENV=production APP_DEBUG=false
+WORKDIR /var/www/html
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD php -r '$r=@file_get_contents("http://127.0.0.1/api/v1/health"); exit($r===false?1:0);'
+ENTRYPOINT ["/usr/local/bin/paineldecomando-entrypoint"]

@@ -23,8 +23,23 @@ Sem Docker, execute `npm install && npm run dev` em `frontend`. Para a API, conf
 ```bash
 cd frontend
 npm run typecheck
-npm run build
 npm run lint
+npm test
+npm audit --audit-level=high
+npm run build
+cd ..
+php backend/tests/run.php
 ```
 
-Composer não é obrigatório nesta base: o autoloader PSR-4 interno evita bootstrap externo. Em produção, use segredos fortes, HTTPS, SMTP real, backup, fila de e-mails, armazenamento privado de uploads e desative `APP_DEBUG`.
+Composer não é obrigatório nesta base: o autoloader PSR-4 interno evita bootstrap externo.
+
+## Produção
+
+A imagem de produção usa Nginx para o frontend, Apache/PHP para a API e MariaDB sem porta pública. Consulte o checklist completo em [docs/PRODUCTION.md](docs/PRODUCTION.md).
+
+```powershell
+Copy-Item .env.production.example .env.production
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+```
+
+O build de produção bloqueia placeholders de telefone, WhatsApp, endereço e horário. A API gera logs JSON estruturados com `request_id` e remoção de segredos.

@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { PublicLayout } from '../components/layout/PublicLayout';
-import { AdminPage, CompanyPage, ContactPage, DetailPage, LegalPage, ListingPage, LoginPage, NotFoundPage, QuotePage } from '../pages/PublicPages';
+import { AccountPage, AdminPage, BuyerPolicyPage, CartPage, CompanyPage, ContactPage, DetailPage, LegalPage, ListingPage, LoginPage, NotFoundPage, QuotePage } from '../pages/PublicPages';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const sections = ['Produtos', 'Categorias', 'Segmentos', 'Serviços', 'Projetos', 'Posts', 'Leads', 'Configurações'];
@@ -17,6 +17,9 @@ export function AppRoutes() {
       <Route path="projetos" element={<ListingPage kind="projetos"/>}/><Route path="projetos/:slug" element={<DetailPage kind="projeto"/>}/>
       <Route path="blog" element={<ListingPage kind="blog"/>}/><Route path="blog/:slug" element={<DetailPage kind="artigo"/>}/>
       <Route path="orcamento" element={<QuotePage/>}/><Route path="contato" element={<ContactPage/>}/>
+      <Route path="carrinho" element={<CartPage/>}/>
+      <Route path="conta" element={<AccountPage/>}/>
+      <Route path="trocas-e-devolucoes" element={<BuyerPolicyPage kind="returns"/>}/><Route path="garantia" element={<BuyerPolicyPage kind="warranty"/>}/>
       <Route path="politica-de-privacidade" element={<LegalPage/>}/><Route path="termos-de-uso" element={<LegalPage terms/>}/><Route path="*" element={<NotFoundPage/>}/>
     </Route>
     <Route path="admin/login" element={<LoginPage/>}/>
@@ -24,4 +27,3 @@ export function AppRoutes() {
     <Route path="/solucoes" element={<Navigate to="/produtos" replace/>}/>
   </Routes></Suspense>;
 }
-

@@ -1,0 +1,59 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+        VITE_COMPANY_NAME: ${VITE_COMPANY_NAME}
+        VITE_COMPANY_SHORT_NAME: ${VITE_COMPANY_SHORT_NAME}
+        VITE_COMPANY_LEGAL_NAME: ${VITE_COMPANY_LEGAL_NAME}
+        VITE_COMPANY_CNPJ: ${VITE_COMPANY_CNPJ}
+        VITE_COMPANY_PHONE: ${VITE_COMPANY_PHONE}
+        VITE_COMPANY_WHATSAPP: ${VITE_COMPANY_WHATSAPP}
+        VITE_COMPANY_WHATSAPP_LABEL: ${VITE_COMPANY_WHATSAPP_LABEL}
+        VITE_COMPANY_EMAIL: ${VITE_COMPANY_EMAIL}
+        VITE_COMPANY_ADDRESS: ${VITE_COMPANY_ADDRESS}
+        VITE_COMPANY_HOURS: ${VITE_COMPANY_HOURS}
+        VITE_COMPANY_DELIVERY_NOTICE: ${VITE_COMPANY_DELIVERY_NOTICE}
+    ports: ["80:80"]
+    restart: unless-stopped
+    depends_on: [api]
+    logging: { options: { max-size: "10m", max-file: "5" } }
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile.prod
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      LOG_PATH: /var/www/html/storage/logs
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    volumes: ["api_logs:/var/www/html/storage/logs"]
+    logging: { options: { max-size: "10m", max-file: "5" } }
+
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - database_prod:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    logging: { options: { max-size: "10m", max-file: "5" } }
+
+volumes:
+  database_prod:
+  api_logs:

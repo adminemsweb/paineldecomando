@@ -13,6 +13,9 @@ Router → Middleware → Controller → Service → Repository → PDO → Mari
 Decisões:
 
 - `fetch` nativo reduz dependências; uma camada única padroniza timeout, erros e autenticação.
+- `ErrorBoundary` impede que uma falha de renderização deixe a aplicação inteira em branco.
+- Respostas da API carregam `request_id`; logs JSON correlacionam rota, nível e exceção sem registrar segredos.
+- Integrações externas ficam em Services e são acionadas por Controllers, mantendo as rotas declarativas.
 - Sessão HTTP-only é a estratégia inicial do admin, com CSRF nas mutações, `SameSite=Lax` e `Secure` em produção.
 - Conteúdo publicado é público; rascunhos e CRUD exigem sessão e permissão.
 - Uploads ficam fora da execução PHP, são renomeados aleatoriamente e validados por extensão, MIME e tamanho.
@@ -72,4 +75,3 @@ Administrativos: `GET /admin/dashboard` e CRUD REST de `products`, `categories`,
 ## Dados pendentes
 
 Nome/razão social, logotipo, domínio, telefones, WhatsApp, e-mails, endereço/mapa, horários, redes, história, equipe, área atendida, indicadores comprováveis, normas/certificações confirmadas, garantias, portfólio e fotos autorizadas, textos jurídicos revisados, SMTP, analytics e pixels. Todo placeholder deve ser substituído antes da produção.
-
