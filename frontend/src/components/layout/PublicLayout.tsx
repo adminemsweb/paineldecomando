@@ -217,13 +217,21 @@ export function PublicLayout() {
           </div>
 
           <button
-            className="menu-button"
+            className={open ? "menu-button menu-button--open" : "menu-button"}
             type="button"
             aria-expanded={open}
             aria-controls="store-menu"
-            onClick={() => setOpen(!open)}
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            onClick={() => {
+              setOpenProductMenu(null);
+              setOpen(!open);
+            }}
           >
-            Menu
+            <span className="menu-button__icon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
           </button>
         </div>
 
