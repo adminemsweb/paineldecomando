@@ -9,6 +9,7 @@ spl_autoload_register(static function (string $class): void {
 });
 
 use App\Core\Logger;
+use App\Services\CepService;
 use App\Services\CorreiosService;
 use App\Validators\LeadValidator;
 
@@ -38,6 +39,15 @@ $test('CorreiosService valida CEP antes de acessar credenciais', static function
         throw $exception;
     }
     throw new RuntimeException('CEP inválido foi aceito.');
+});
+
+$test('CepService valida CEP antes de consultar o provedor', static function (): void {
+    try { (new CepService())->lookup('123'); }
+    catch (RuntimeException $exception) {
+        if (str_contains($exception->getMessage(), 'CEP v')) return;
+        throw $exception;
+    }
+    throw new RuntimeException('CEP invalido foi aceito.');
 });
 
 $test('Logger grava JSON e remove segredos', static function () use ($assert): void {

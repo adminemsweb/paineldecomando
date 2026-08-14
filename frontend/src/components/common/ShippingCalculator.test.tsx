@@ -18,4 +18,28 @@ describe('ShippingCalculator', () => {
     fireEvent.change(input, { target: { value: '18056450' } });
     expect(input.value).toBe('18056-450');
   });
+
+  it('consulta cidade e UF no cabecalho sem solicitar cotacao de frete', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+      success: true,
+      data: {
+        cep: '18056450',
+        address: 'Jardim Simus, Sorocaba - SP',
+        city: 'Sorocaba',
+        uf: 'SP',
+        options: [],
+      },
+      message: 'CEP encontrado.',
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    render(<ShippingCalculator/>);
+    fireEvent.change(screen.getByLabelText(/CEP de entrega/i), { target: { value: '18056450' } });
+    fireEvent.click(screen.getByRole('button', { name: /buscar CEP/i }));
+
+    expect(await screen.findByText(/Entrega selecionada: Sorocaba\/SP/i)).toBeInTheDocument();
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/shipping/cep'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
 });

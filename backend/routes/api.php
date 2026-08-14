@@ -9,6 +9,7 @@ use App\Database\Connection;
 use App\Repositories\ProductRepository;
 use App\Services\LeadService;
 use App\Services\CorreiosService;
+use App\Services\CepService;
 use App\Validators\LeadValidator;
 
 $router->get('/api/v1/health', static fn() => Response::success(['service' => 'site-industrial-api', 'version' => '1.0.0'], 'API disponível.'));
@@ -35,6 +36,9 @@ $router->post('/api/v1/leads', static function (Request $request) {
 
 $router->post('/api/v1/shipping/quote', static function (Request $request) {
     (new ShippingController(new CorreiosService()))->quote($request);
+});
+$router->post('/api/v1/shipping/cep', static function (Request $request) {
+    (new ShippingController(new CorreiosService(), new CepService()))->lookupCep($request);
 });
 
 $router->post('/api/v1/contacts', static fn() => Response::error('Endpoint reservado para a Etapa 3.', 501));
