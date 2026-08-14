@@ -7,7 +7,8 @@ use RuntimeException;
 
 final class CepService
 {
-    private const API_BASE = 'https://viacep.com.br/ws';
+    private const BRASIL_API_BASE = 'https://brasilapi.com.br/api/cep/v1';
+    private const VIA_CEP_BASE = 'https://viacep.com.br/ws';
 
     /** @return array{cep:string,address:string,city:string,uf:string,options:array{}} */
     public function lookup(string $value): array
@@ -15,30 +16,29 @@ final class CepService
         $cep = preg_replace('/\D/', '', $value) ?? '';
         if (strlen($cep) !== 8) throw new RuntimeException('Informe um CEP válido com 8 dígitos.');
 
-        $handle = curl_init(self::API_BASE . "/{$cep}/json/");
-        if ($handle === false) throw new RuntimeException('Não foi possível iniciar a consulta do CEP.');
-
-        curl_setopt_array($handle, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Accept: application/json', 'User-Agent: PainelDeComando/1.0'],
-            CURLOPT_CONNECTTIMEOUT => 4,
-            CURLOPT_TIMEOUT => 8,
-        ]);
-
-        $raw = curl_exec($handle);
-        $status = (int)curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-        curl_close($handle);
-
-        if (!is_string($raw) || $status < 200 || $status >= 300) {
-            throw new RuntimeException('Não foi possível consultar esse CEP agora. Tente novamente.');
+        $providers = [
+            fn(): ?array => $this->fromBrasilApi($cep),
+            fn(): ?array => $this->fromViaCep($cep),
+        ];
+        $providerFailures = 0;
+        $data = null;
+        foreach ($providers as $provider) {
+            try {
+                $data = $provider();
+                if ($data !== null) break;
+            } catch (RuntimeException) {
+                $providerFailures++;
+            }
         }
 
-        $data = json_decode($raw, true);
-        if (!is_array($data) || ($data['erro'] ?? false)) throw new RuntimeException('CEP não encontrado.');
+        if ($data === null && $providerFailures === count($providers)) {
+            throw new RuntimeException('Não foi possível consultar esse CEP agora. Tente novamente.');
+        }
+        if ($data === null) throw new RuntimeException('CEP não encontrado.');
 
-        $street = trim((string)($data['logradouro'] ?? ''));
-        $district = trim((string)($data['bairro'] ?? ''));
-        $city = trim((string)($data['localidade'] ?? ''));
+        $street = trim((string)($data['street'] ?? ''));
+        $district = trim((string)($data['district'] ?? ''));
+        $city = trim((string)($data['city'] ?? ''));
         $uf = trim((string)($data['uf'] ?? ''));
         if ($city === '' || $uf === '') throw new RuntimeException('O serviço de CEP retornou um endereço incompleto.');
 
@@ -49,5 +49,56 @@ final class CepService
             'uf' => $uf,
             'options' => [],
         ];
+    }
+
+    /** @return array{street:string,district:string,city:string,uf:string}|null */
+    private function fromBrasilApi(string $cep): ?array
+    {
+        [$status, $data] = $this->request(self::BRASIL_API_BASE . "/{$cep}");
+        if ($status === 404) return null;
+        if ($status < 200 || $status >= 300 || !is_array($data)) throw new RuntimeException('BrasilAPI indisponível.');
+
+        return [
+            'street' => (string)($data['street'] ?? ''),
+            'district' => (string)($data['neighborhood'] ?? ''),
+            'city' => (string)($data['city'] ?? ''),
+            'uf' => (string)($data['state'] ?? ''),
+        ];
+    }
+
+    /** @return array{street:string,district:string,city:string,uf:string}|null */
+    private function fromViaCep(string $cep): ?array
+    {
+        [$status, $data] = $this->request(self::VIA_CEP_BASE . "/{$cep}/json/");
+        if ($status < 200 || $status >= 300 || !is_array($data)) throw new RuntimeException('ViaCEP indisponível.');
+        if (($data['erro'] ?? false) === true) return null;
+
+        return [
+            'street' => (string)($data['logradouro'] ?? ''),
+            'district' => (string)($data['bairro'] ?? ''),
+            'city' => (string)($data['localidade'] ?? ''),
+            'uf' => (string)($data['uf'] ?? ''),
+        ];
+    }
+
+    /** @return array{0:int,1:mixed} */
+    private function request(string $url): array
+    {
+        $handle = curl_init($url);
+        if ($handle === false) throw new RuntimeException('Não foi possível iniciar a consulta do CEP.');
+
+        curl_setopt_array($handle, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Accept: application/json', 'User-Agent: PainelDeComando/1.0'],
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_TIMEOUT => 6,
+        ]);
+
+        $raw = curl_exec($handle);
+        $status = (int)curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+        curl_close($handle);
+        if (!is_string($raw)) throw new RuntimeException('O provedor de CEP não respondeu.');
+
+        return [$status, json_decode($raw, true)];
     }
 }
