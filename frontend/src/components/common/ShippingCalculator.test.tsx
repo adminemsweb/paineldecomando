@@ -36,7 +36,8 @@ describe('ShippingCalculator', () => {
     fireEvent.change(screen.getByLabelText(/CEP de entrega/i), { target: { value: '18056450' } });
     fireEvent.click(screen.getByRole('button', { name: /buscar CEP/i }));
 
-    expect(await screen.findByText(/Entrega selecionada: Sorocaba\/SP/i)).toBeInTheDocument();
+    expect(await screen.findByText('Jardim Simus, Sorocaba - SP')).toBeInTheDocument();
+    expect(screen.queryByText(/Entrega selecionada/i)).not.toBeInTheDocument();
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining('/shipping/cep'),
       expect.objectContaining({ method: 'POST' }),

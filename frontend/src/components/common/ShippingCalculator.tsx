@@ -46,9 +46,7 @@ export function ShippingCalculator({ variant = 'header' }: { variant?: 'header' 
   </form>;
 
   return <div className="header-delivery">
-    <div className="header-delivery__label"><Icon name="pin" size={21}/><span><small>Entregar em</small><strong title={quote?.address}>{quote ? `${quote.city}/${quote.uf}` : 'Informe seu CEP'}</strong></span></div>
+    <div className="header-delivery__label"><Icon name="pin" size={21}/><span><small>Entregar em</small><strong className={error ? 'header-delivery__error' : undefined} role={error ? 'alert' : undefined} title={error || quote?.address}>{error || quote?.address || 'Informe seu CEP'}</strong></span></div>
     <form onSubmit={submit}><label className="sr-only" htmlFor="header-cep">CEP de entrega</label><input id="header-cep" inputMode="numeric" autoComplete="postal-code" value={cep} onChange={(event) => updateCep(event.target.value)} placeholder="00000-000"/><button type="submit" aria-label="Buscar CEP" disabled={loading}><Icon name="search" size={18}/></button></form>
-    {error && <small className="header-delivery__feedback" role="alert">{error}</small>}
-    {quote && <small className="header-delivery__feedback header-delivery__feedback--success">Entrega selecionada: {quote.city}/{quote.uf}</small>}
   </div>;
 }
