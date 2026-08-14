@@ -17,6 +17,7 @@ services:
       - ./backend:/var/www/html
     ports:
       - "8080:80"
+    command: sh -c "php bin/migrate.php && apache2-foreground"
     environment:
       APP_ENV: development
       APP_DEBUG: "true"
@@ -51,7 +52,7 @@ services:
       MARIADB_PASSWORD: change_me
       MARIADB_ROOT_PASSWORD: change_root_password
     ports:
-      - "3306:3306"
+      - "127.0.0.1:${DB_FORWARD_PORT:-3308}:3306"
     volumes:
       - database_data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro

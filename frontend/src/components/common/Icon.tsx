@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-type IconName = 'headset' | 'clipboard' | 'whatsapp' | 'cart' | 'user' | 'search' | 'arrow' | 'mail' | 'lock' | 'shield' | 'check' | 'pin' | 'instagram' | 'facebook' | 'tiktok' | 'truck' | 'discount' | 'creditCard' | 'partnership';
+type IconName = 'headset' | 'clipboard' | 'whatsapp' | 'cart' | 'user' | 'search' | 'arrow' | 'mail' | 'lock' | 'shield' | 'check' | 'pin' | 'instagram' | 'facebook' | 'tiktok' | 'truck' | 'discount' | 'creditCard' | 'partnership' | 'idCard' | 'map' | 'support' | 'verified' | 'save';
 
 const paths: Record<IconName, ReactNode> = {
   headset: <><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><path d="M4 13h3v6H5a1 1 0 0 1-1-1v-5Zm16 0h-3v6h2a1 1 0 0 0 1-1v-5Z"/><path d="M17 19c0 1.1-.9 2-2 2h-3"/></>,
@@ -22,6 +22,11 @@ const paths: Record<IconName, ReactNode> = {
   discount: <><path d="M20 12c0 4.4-3.6 8-8 8-1.4 0-2.8-.4-4-1l-5 2 2-5a8 8 0 1 1 15-4Z"/><path d="m8 16 8-8"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/></>,
   creditCard: <><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M15 15h2m2 0h.1"/><path d="m6 6 9-3 2 3"/></>,
   partnership: <><path d="M10.6 13.4a4.5 4.5 0 0 0 6.4 0l2.1-2.1a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"/><path d="M13.4 10.6a4.5 4.5 0 0 0-6.4 0l-2.1 2.1a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/></>,
+  idCard: <><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="2"/><path d="M5.5 16c.5-2 1.5-3 3-3s2.5 1 3 3M14 9h4m-4 4h4m-4 3h2.5"/></>,
+  map: <><path d="m3.5 6 5-2.5 7 3 5-2.5v14l-5 2.5-7-3-5 2.5V6Z"/><path d="M8.5 3.5v14m7-11v14"/><circle cx="12" cy="10" r="1.8"/><path d="M12 11.8v2.4"/></>,
+  support: <><path d="M4 12a8 8 0 0 1 16 0v4a2 2 0 0 1-2 2h-2v-6h4M4 12h4v6H6a2 2 0 0 1-2-2v-4Z"/><path d="M16 18c0 1.7-1.3 3-3 3h-2"/></>,
+  verified: <><path d="m12 2.8 2.3 1.4 2.7-.1 1.2 2.4 2.3 1.5-.3 2.7 1.1 2.5-1.8 2-.4 2.7-2.6.8-1.6 2.2-2.6-.9-2.6.9-1.6-2.2-2.6-.8-.4-2.7-1.8-2 1.1-2.5-.3-2.7 2.3-1.5 1.2-2.4 2.7.1L12 2.8Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></>,
+  save: <><path d="M5 3h12l2 2v16H5V3Z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></>,
 };
 
 export function Icon({ name, size = 22 }: { name: IconName; size?: number }) {

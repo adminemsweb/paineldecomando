@@ -16,7 +16,7 @@ Decisões:
 - `ErrorBoundary` impede que uma falha de renderização deixe a aplicação inteira em branco.
 - Respostas da API carregam `request_id`; logs JSON correlacionam rota, nível e exceção sem registrar segredos.
 - Integrações externas ficam em Services e são acionadas por Controllers, mantendo as rotas declarativas.
-- Sessão HTTP-only é a estratégia inicial do admin, com CSRF nas mutações, `SameSite=Lax` e `Secure` em produção.
+- Sessões usam tokens opacos em cookie `HttpOnly`, `SameSite=Lax` e `Secure` em produção; somente o hash do token é persistido e origens externas são rejeitadas nas mutações.
 - Conteúdo publicado é público; rascunhos e CRUD exigem sessão e permissão.
 - Uploads ficam fora da execução PHP, são renomeados aleatoriamente e validados por extensão, MIME e tamanho.
 - Exclusão lógica preserva histórico editorial e comercial.
@@ -34,7 +34,7 @@ Decisões:
 
 ## Modelo de dados
 
-- Identidade e acesso: `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `password_resets`, `activity_logs`.
+- Identidade e acesso: `users`, `customer_profiles`, `customer_addresses`, `user_sessions`, `roles`, `permissions`, `user_roles`, `role_permissions`, `password_resets`, `activity_logs`.
 - Catálogo: `products`, `categories`, `product_categories`, `product_images`, `product_specifications`, `product_applications`, `product_segments`, `downloads`.
 - Conteúdo: `segments`, `services`, `projects`, `project_images`, `project_products`, `posts`, `authors`, `post_categories`, `tags`, `post_tags`, `media`.
 - Comercial: `leads`, `lead_files`, `lead_history`, `contacts`.
@@ -44,7 +44,7 @@ O diagrama lógico completo e as restrições estão materializados em `database
 
 ## Endpoints
 
-Públicos: `GET /products[/{slug}]`, `/categories`, `/segments[/{slug}]`, `/services[/{slug}]`, `/projects[/{slug}]`, `/posts[/{slug}]`; `POST /leads`, `/contacts`, `/auth/login`, `/auth/logout`, `/auth/forgot-password`.
+Públicos: `GET /products[/{slug}]`, `/categories`, `/segments[/{slug}]`, `/services[/{slug}]`, `/projects[/{slug}]`, `/posts[/{slug}]`; `POST /leads`, `/contacts`, `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/profile`, `/auth/forgot-password`. A sessão atual é consultada em `GET /auth/me`; `/auth/profile` exige sessão válida e persiste dados pessoais e endereço.
 
 Administrativos: `GET /admin/dashboard` e CRUD REST de `products`, `categories`, `segments`, `services`, `projects`, `posts`, `leads` e `settings`. Listagens recebem `page`, `per_page`, `search`, `sort`, `direction` e filtros próprios. Respostas seguem `{success,data,message,meta,errors}`.
 

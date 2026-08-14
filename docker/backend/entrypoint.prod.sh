@@ -6,4 +6,6 @@ if [ -n "${DB_PASSWORD_FILE:-}" ]; then
   export DB_PASSWORD
 fi
 
+php /var/www/html/bin/migrate.php
+
 exec apache2-foreground

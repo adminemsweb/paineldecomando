@@ -14,7 +14,7 @@ docker compose up --build
 
 - Site: `http://localhost:5173`
 - API/health: `http://localhost:8080/api/v1/health`
-- MariaDB: `localhost:3306`
+- MariaDB: `127.0.0.1:3308` (altere `DB_FORWARD_PORT` se necessário)
 
 Sem Docker, execute `npm install && npm run dev` em `frontend`. Para a API, configure `backend/.env`, importe `database/schema.sql` e aponte um servidor PHP cujo document root seja `backend/public`.
 

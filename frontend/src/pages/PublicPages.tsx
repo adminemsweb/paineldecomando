@@ -5,6 +5,8 @@ import { Icon } from '../components/common/Icon';
 import { PaymentIcon } from '../components/common/PaymentIcon';
 import { ShippingCalculator } from '../components/common/ShippingCalculator';
 import { companyConfig } from '../constants/company';
+import { ApiError, apiRequest } from '../services/api';
+import { Customer, useAuth } from '../auth/AuthContext';
 import { PolicyDocument } from './policies/PolicyDocument';
 import { TechnicalTicketPage } from './TechnicalTicketPage';
 
@@ -115,8 +117,129 @@ export function CartPage() {
 }
 
 export function AccountPage() {
+  const { user: accountUser, loading: checkingSession, setUser: setAccountUser } = useAuth();
   const [accountMode, setAccountMode] = useState<'login' | 'register'>('login');
-  return <><PageHero eyebrow="Sua conta" title={accountMode === 'login' ? 'Entre na sua conta' : 'Crie sua conta'} body="Acesse seus pedidos e avaliações ou faça um novo cadastro."/><section className="section"><div className="container account-grid"><div><h2>Uma compra industrial mais simples.</h2><p>Entre para avaliar produtos, organizar solicitações e acompanhar seus pedidos.</p><ul><li>Avalie produtos comprados</li><li>Acompanhe cotações e pedidos</li><li>Agilize novas compras</li></ul></div><form className="form account-access" onSubmit={(event) => event.preventDefault()}><div className="account-access__switch"><button type="button" className={accountMode === 'login' ? 'active' : ''} onClick={() => setAccountMode('login')}>Entrar</button><button type="button" className={accountMode === 'register' ? 'active' : ''} onClick={() => setAccountMode('register')}>Criar conta</button></div>{accountMode === 'register' && <><label>Nome<input name="name" required autoComplete="name"/></label><label>Empresa<input name="company" autoComplete="organization"/></label><label>Telefone<input name="phone" required autoComplete="tel"/></label></>}<label>E-mail<input name="email" type="email" required autoComplete="email"/></label><label>Senha<input name="password" type="password" required autoComplete={accountMode === 'login' ? 'current-password' : 'new-password'}/></label><button className="button button--primary" type="submit">{accountMode === 'login' ? 'Entrar na conta' : 'Criar minha conta'}</button><small>O acesso definitivo será conectado à API de autenticação.</small></form></div></section></>;
+  const [profileTab, setProfileTab] = useState<'personal' | 'address' | 'support'>(() => window.location.hash === '#endereco-principal' ? 'address' : window.location.hash === '#atendimento' ? 'support' : 'personal');
+  const [submitting, setSubmitting] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [profile, setProfile] = useState({ name: '', company: '', phone: '', postalCode: '', street: '', number: '', complement: '', district: '', city: '', state: '' });
+  const [profileUserId, setProfileUserId] = useState<number | null>(null);
+  const selectProfileTab = (tab: 'personal' | 'address' | 'support') => {
+    setProfileTab(tab);
+    const hash = tab === 'address' ? '#endereco-principal' : tab === 'support' ? '#atendimento' : '#dados-pessoais';
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
+  };
+  if (accountUser && profileUserId !== accountUser.id) {
+    setProfile({ name: accountUser.name, company: accountUser.company ?? '', phone: accountUser.phone, postalCode: accountUser.address?.postalCode ?? '', street: accountUser.address?.street ?? '', number: accountUser.address?.number ?? '', complement: accountUser.address?.complement ?? '', district: accountUser.address?.district ?? '', city: accountUser.address?.city ?? '', state: accountUser.address?.state ?? '' });
+    setProfileUserId(accountUser.id);
+  }
+  const changeMode = (mode: 'login' | 'register') => { setAccountMode(mode); setNotice(''); setFormError(''); };
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    setSubmitting(true);
+    setNotice('');
+    setFormError('');
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries()) as Record<string, FormDataEntryValue | boolean>;
+    if (accountMode === 'register') payload.consent = formData.get('consent') === 'on';
+    try {
+      const response = await apiRequest<Customer>(accountMode === 'login' ? '/auth/login' : '/auth/register', { method: 'POST', body: JSON.stringify(payload) });
+      setAccountUser(response.data);
+      setNotice(response.message ?? (accountMode === 'login' ? 'Acesso realizado com sucesso.' : 'Conta criada com sucesso.'));
+      form.reset();
+    } catch (error) {
+      const fieldMessage = error instanceof ApiError && error.errors ? Object.values(error.errors).flat()[0] : undefined;
+      setFormError(fieldMessage ?? (error instanceof ApiError ? error.message : 'Não foi possível concluir a solicitação.'));
+    } finally { setSubmitting(false); }
+  };
+  const logout = async () => {
+    setSubmitting(true);
+    try { await apiRequest('/auth/logout', { method: 'POST' }); setAccountUser(null); setProfileUserId(null); setNotice('Sessão encerrada com sucesso.'); }
+    catch (error) { setFormError(error instanceof ApiError ? error.message : 'Não foi possível sair da conta.'); }
+    finally { setSubmitting(false); }
+  };
+  const updateProfileField = (field: keyof typeof profile, value: string) => setProfile(current => ({ ...current, [field]: value }));
+  const lookupProfileCep = async () => {
+    if (profile.postalCode.replace(/\D/g, '').length !== 8) { setFormError('Informe um CEP válido com 8 dígitos.'); return; }
+    setCepLoading(true); setFormError('');
+    try {
+      const response = await apiRequest<{ cep: string; street: string; district: string; city: string; uf: string }>('/shipping/cep', { method: 'POST', body: JSON.stringify({ cep: profile.postalCode }) });
+      setProfile(current => ({ ...current, postalCode: response.data.cep, street: response.data.street, district: response.data.district, city: response.data.city, state: response.data.uf }));
+      setNotice('Endereço localizado. Confira o número e o complemento.');
+    } catch (error) { setFormError(error instanceof ApiError ? error.message : 'Não foi possível consultar o CEP.'); }
+    finally { setCepLoading(false); }
+  };
+  const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); setSubmitting(true); setNotice(''); setFormError('');
+    try {
+      const payload: Record<string, unknown> = { name: profile.name, company: profile.company, phone: profile.phone };
+      if (profileTab === 'address') payload.address = { postalCode: profile.postalCode, street: profile.street, number: profile.number, complement: profile.complement, district: profile.district, city: profile.city, state: profile.state };
+      const response = await apiRequest<Customer>('/auth/profile', { method: 'POST', body: JSON.stringify(payload) });
+      setAccountUser(response.data); setNotice(response.message ?? 'Dados atualizados com sucesso.');
+    } catch (error) {
+      const fieldMessage = error instanceof ApiError && error.errors ? Object.values(error.errors).flat()[0] : undefined;
+      setFormError(fieldMessage ?? (error instanceof ApiError ? error.message : 'Não foi possível atualizar seus dados.'));
+    } finally { setSubmitting(false); }
+  };
+  const submitAccountForm = (event: FormEvent<HTMLFormElement>) => {
+    if (profileTab !== 'support') { void saveProfile(event); return; }
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const message = ['Olá! Gostaria de abrir um atendimento.', `Cliente: ${accountUser?.name}`, `Empresa: ${accountUser?.company || 'Não informada'}`, `E-mail: ${accountUser?.email}`, `WhatsApp: ${accountUser?.phone}`, `Assunto: ${data.get('subject')}`, `Painel: ${data.get('product')}`, `Potência: ${data.get('power') || 'Não informada'}`, `Tensão: ${data.get('voltage') || 'Não informada'}`, `Aplicação: ${data.get('application') || 'Não informada'}`, `Mensagem: ${data.get('message')}`].join('\n');
+    window.open(`https://wa.me/${companyConfig.whatsapp}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  };
+
+  if (checkingSession) return <section className="account-page account-page--session-loading"><div className="account-page-loading" role="status"><Icon name="verified" size={24}/><div><strong>Carregando sua conta</strong><span>Estamos verificando sua sessão com segurança.</span></div></div></section>;
+
+  return <section className={accountUser ? 'account-page account-page--dashboard' : 'account-page'}><div className="container account-shell">
+    {accountUser ? <aside className="account-customer-nav">
+      <div className="account-customer-nav__title"><span>Painel do cliente</span><strong>Minha conta</strong></div>
+      <div className="account-customer-nav__identity"><span aria-hidden="true">{accountUser.name.charAt(0).toUpperCase()}</span><div><strong>{accountUser.name}</strong><small>{accountUser.email}</small></div></div>
+      <nav aria-label="Navegação da conta"><button type="button" className={profileTab === 'personal' ? 'active' : ''} onClick={() => selectProfileTab('personal')}><Icon name="idCard" size={20}/><span><strong>Dados pessoais</strong><small>Nome, empresa e contato</small></span></button><button type="button" className={profileTab === 'address' ? 'active' : ''} onClick={() => selectProfileTab('address')}><Icon name="map" size={20}/><span><strong>Endereço principal</strong><small>Entrega e cálculo de frete</small></span></button><button type="button" className={profileTab === 'support' ? 'active' : ''} onClick={() => selectProfileTab('support')}><Icon name="support" size={20}/><span><strong>Atendimento</strong><small>Suporte, garantia e orçamento</small></span></button></nav>
+      <div className="account-customer-nav__security"><Icon name="verified" size={22}/><div><strong>Ambiente protegido</strong><small>Sessão segura e dados tratados conforme a LGPD.</small></div></div>
+    </aside> : <aside className="account-intro">
+      <span className="eyebrow">Sua área de compras</span>
+      <h1>Mais controle em cada etapa do seu pedido.</h1>
+      <p>Centralize compras, avaliações e solicitações técnicas em um ambiente organizado para sua empresa.</p>
+      <div className="account-benefits">
+        <article><Icon name="clipboard" size={24}/><div><strong>Acompanhe seus pedidos</strong><span>Consulte o andamento das suas compras e cotações.</span></div></article>
+        <article><Icon name="check" size={24}/><div><strong>Avalie produtos comprados</strong><span>Compartilhe sua experiência com compras verificadas.</span></div></article>
+        <article><Icon name="headset" size={24}/><div><strong>Atendimento mais ágil</strong><span>Mantenha suas solicitações reunidas em um só lugar.</span></div></article>
+      </div>
+      <div className="account-trust"><Icon name="shield" size={22}/><span><strong>Seus dados protegidos</strong>Privacidade e segurança em todas as etapas.</span></div>
+    </aside>}
+
+    <div className="account-card">
+      {accountUser ? <div className="account-dashboard">
+        <header className="account-dashboard__header"><div><span className="eyebrow">Área do cliente</span><h2>Olá, {accountUser.name.split(' ')[0]}.</h2><p>Gerencie seus dados pessoais e o endereço usado nas compras.</p></div><span className="account-dashboard__status"><Icon name="verified" size={17}/> Conta ativa</span></header>
+        {notice && <div className="account-form__notice" role="status">{notice}</div>}
+        {formError && <div className="account-form__error" role="alert">{formError}</div>}
+        <div className="account-profile-tabs" role="tablist" aria-label="Dados da conta"><button type="button" role="tab" aria-selected={profileTab === 'personal'} className={profileTab === 'personal' ? 'active' : ''} onClick={() => selectProfileTab('personal')}>Dados pessoais</button><button type="button" role="tab" aria-selected={profileTab === 'address'} className={profileTab === 'address' ? 'active' : ''} onClick={() => selectProfileTab('address')}>Endereço principal</button><button type="button" role="tab" aria-selected={profileTab === 'support'} className={profileTab === 'support' ? 'active' : ''} onClick={() => selectProfileTab('support')}>Atendimento</button></div>
+        <form className="account-profile-form" onSubmit={submitAccountForm}>
+          {profileTab === 'personal' && <section id="dados-pessoais"><div className="account-profile-form__heading"><span>01</span><div><h3>Dados pessoais</h3><p>Informações de contato e identificação da sua conta.</p></div></div><div className="account-profile-form__grid"><label><span className="account-field-label">Nome completo</span><input value={profile.name} onChange={event => updateProfileField('name', event.target.value)} required maxLength={150} autoComplete="name"/></label><label><span className="account-field-label">Empresa <small>(opcional)</small></span><input value={profile.company} onChange={event => updateProfileField('company', event.target.value)} maxLength={190} autoComplete="organization"/></label><label><span className="account-field-label">Telefone</span><input value={profile.phone} onChange={event => updateProfileField('phone', event.target.value)} required maxLength={20} autoComplete="tel" inputMode="tel"/></label><label><span className="account-field-label">E-mail <small>(acesso da conta)</small></span><input value={accountUser.email} disabled aria-describedby="account-email-help"/><small className="account-field-help" id="account-email-help">Para alterar o e-mail, fale com o atendimento.</small></label></div></section>}
+          {profileTab === 'address' && <section id="endereco-principal"><div className="account-profile-form__heading"><span>02</span><div><h3>Endereço principal</h3><p>Usado para entrega e cálculo de frete.</p></div></div><div className="account-profile-form__grid account-address-grid"><label><span className="account-field-label">CEP</span><div className="account-cep-field"><input value={profile.postalCode} onChange={event => updateProfileField('postalCode', event.target.value)} required inputMode="numeric" autoComplete="postal-code" placeholder="00000-000"/><button type="button" onClick={lookupProfileCep} disabled={cepLoading}>{cepLoading ? 'Buscando…' : 'Buscar CEP'}</button></div></label><label><span className="account-field-label">Rua</span><input value={profile.street} onChange={event => updateProfileField('street', event.target.value)} required maxLength={190} autoComplete="address-line1"/></label><label className="account-address-number"><span className="account-field-label">Número</span><input value={profile.number} onChange={event => updateProfileField('number', event.target.value)} required maxLength={30}/></label><label><span className="account-field-label">Complemento <small>(opcional)</small></span><input value={profile.complement} onChange={event => updateProfileField('complement', event.target.value)} maxLength={120} autoComplete="address-line2"/></label><label><span className="account-field-label">Bairro</span><input value={profile.district} onChange={event => updateProfileField('district', event.target.value)} required maxLength={120}/></label><label><span className="account-field-label">Cidade</span><input value={profile.city} onChange={event => updateProfileField('city', event.target.value)} required maxLength={120} autoComplete="address-level2"/></label><label className="account-address-state"><span className="account-field-label">Estado</span><input value={profile.state} onChange={event => updateProfileField('state', event.target.value.toUpperCase().slice(0, 2))} required maxLength={2} autoComplete="address-level1" placeholder="SP"/></label></div></section>}
+          {profileTab === 'support' && <section id="atendimento"><div className="account-profile-form__heading"><span>03</span><div><h3>Atendimento</h3><p>Envie sua solicitação já identificada para nossa equipe.</p></div></div><div className="account-support-customer"><Icon name="verified" size={20}/><div><strong>{accountUser.name}</strong><span>{accountUser.email} · {accountUser.phone}</span></div></div><div className="account-profile-form__grid account-support-grid"><label><span className="account-field-label">Assunto</span><select name="subject" defaultValue="Suporte técnico"><option>Suporte técnico</option><option>Orçamento</option><option>Garantia</option><option>Troca ou devolução</option></select></label><label><span className="account-field-label">Painel</span><select name="product" defaultValue="Painel Estrela Triângulo 15CV"><option>Painel Estrela Triângulo 15CV</option><option>Painel com Soft Starter</option><option>Painel com Inversor de Frequência</option><option>Painel para Bombas</option><option>Projeto personalizado</option></select></label><label><span className="account-field-label">Potência <small>(opcional)</small></span><input name="power" placeholder="Ex.: 15 CV / 11 kW"/></label><label><span className="account-field-label">Tensão <small>(opcional)</small></span><input name="voltage" placeholder="Ex.: 220 V / 380 V"/></label><label className="account-support-wide"><span className="account-field-label">Aplicação <small>(opcional)</small></span><textarea name="application" placeholder="Ex.: bomba, esteira ou máquina industrial"/></label><label className="account-support-wide"><span className="account-field-label">Como podemos ajudar?</span><textarea name="message" required placeholder="Descreva sua solicitação com os detalhes importantes"/></label></div></section>}
+          <div className="account-profile-form__actions">{profileTab === 'support' ? <button className="account-action account-action--whatsapp" type="submit"><span><Icon name="whatsapp" size={19}/></span><strong>Abrir no WhatsApp</strong></button> : <button className="account-action account-action--save" type="submit" disabled={submitting}><span><Icon name="save" size={18}/></span><strong>{submitting ? 'Salvando…' : profileTab === 'address' ? 'Salvar endereço' : 'Salvar dados pessoais'}</strong></button>}<button className="account-logout" type="button" onClick={logout} disabled={submitting}>Sair da conta</button></div>
+        </form>
+      </div> : <>
+      <header><span>{accountMode === 'login' ? 'Bem-vindo de volta' : 'Comece seu cadastro'}</span><h2>{accountMode === 'login' ? 'Entre na sua conta' : 'Crie sua conta'}</h2><p>{accountMode === 'login' ? 'Use seus dados de acesso para continuar.' : 'Preencha seus dados para criar sua área de cliente.'}</p></header>
+      <div className="account-access__switch" role="tablist" aria-label="Acesso à conta"><button type="button" role="tab" aria-selected={accountMode === 'login'} className={accountMode === 'login' ? 'active' : ''} onClick={() => changeMode('login')}>Entrar</button><button type="button" role="tab" aria-selected={accountMode === 'register'} className={accountMode === 'register' ? 'active' : ''} onClick={() => changeMode('register')}>Criar conta</button></div>
+      <form className="form account-form" onSubmit={submit}>
+        {accountMode === 'register' && <div className="account-form__grid"><label>Nome completo<input name="name" required maxLength={150} autoComplete="name" placeholder="Digite seu nome"/></label><label>Empresa <small>(opcional)</small><input name="company" maxLength={190} autoComplete="organization" placeholder="Nome da empresa"/></label><label className="account-form__wide">Telefone<input name="phone" required maxLength={20} autoComplete="tel" inputMode="tel" placeholder="(00) 00000-0000"/></label></div>}
+        <label>E-mail<input name="email" type="email" required maxLength={190} autoComplete="username" placeholder="seuemail@empresa.com.br"/></label>
+        <label>Senha{accountMode === 'login' && <Link to="/contato">Esqueci minha senha</Link>}<input name="password" type="password" required minLength={8} autoComplete={accountMode === 'login' ? 'current-password' : 'new-password'} placeholder="Mínimo de 8 caracteres"/></label>
+        {accountMode === 'register' && <label className="account-form__consent"><input name="consent" type="checkbox" required/><span>Li e concordo com a <Link to="/politica-de-privacidade">Política de Privacidade</Link>.</span></label>}
+        <button className="button button--primary account-form__submit" type="submit" disabled={submitting}>{submitting ? 'Aguarde…' : accountMode === 'login' ? 'Entrar na minha conta' : 'Criar minha conta'}{!submitting && <Icon name="arrow" size={18}/>}</button>
+        {formError && <div className="account-form__error" role="alert">{formError}</div>}
+        {notice && <div className="account-form__notice" role="status">{notice}</div>}
+      </form>
+      <footer><Icon name="lock" size={17}/><span>Ambiente seguro. Seus dados são tratados conforme nossa <Link to="/politica-de-privacidade">Política de Privacidade</Link>.</span></footer>
+      </>}
+    </div>
+  </div></section>;
 }
 
 export function CompanyPage() { return <><PageHero {...labels.empresa}/><section className="section"><div className="container cards"><article className="card"><h2>Missão</h2><p>TEXTO INSTITUCIONAL A VALIDAR.</p></article><article className="card"><h2>Visão</h2><p>TEXTO INSTITUCIONAL A VALIDAR.</p></article><article className="card"><h2>Valores</h2><p>TEXTO INSTITUCIONAL A VALIDAR.</p></article></div></section></>; }

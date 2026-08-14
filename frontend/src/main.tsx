@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { AuthProvider } from './auth/AuthContext';
 import './styles/global.css';
 
-createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><BrowserRouter><App/></BrowserRouter></ErrorBoundary></StrictMode>);
+createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><BrowserRouter><AuthProvider><App/></AuthProvider></BrowserRouter></ErrorBoundary></StrictMode>);

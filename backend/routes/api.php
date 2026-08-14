@@ -3,10 +3,13 @@ declare(strict_types=1);
 
 use App\Controllers\ProductController;
 use App\Controllers\ShippingController;
+use App\Controllers\AuthController;
 use App\Core\Request;
 use App\Core\Response;
 use App\Database\Connection;
 use App\Repositories\ProductRepository;
+use App\Repositories\AuthRepository;
+use App\Services\AuthService;
 use App\Services\LeadService;
 use App\Services\CorreiosService;
 use App\Services\CepService;
@@ -42,6 +45,10 @@ $router->post('/api/v1/shipping/cep', static function (Request $request) {
 });
 
 $router->post('/api/v1/contacts', static fn() => Response::error('Endpoint reservado para a Etapa 3.', 501));
-$router->post('/api/v1/auth/login', static fn() => Response::error('Autenticação será habilitada na Etapa 4.', 501));
-$router->post('/api/v1/auth/logout', static fn() => Response::success(null, 'Sessão encerrada.'));
+$authController = static fn() => new AuthController(new AuthService(new AuthRepository(Connection::get())));
+$router->post('/api/v1/auth/register', static fn(Request $request) => $authController()->register($request));
+$router->post('/api/v1/auth/login', static fn(Request $request) => $authController()->login($request));
+$router->get('/api/v1/auth/me', static fn(Request $request) => $authController()->me($request));
+$router->post('/api/v1/auth/profile', static fn(Request $request) => $authController()->updateProfile($request));
+$router->post('/api/v1/auth/logout', static fn(Request $request) => $authController()->logout($request));
 $router->post('/api/v1/auth/forgot-password', static fn() => Response::error('Recuperação será habilitada na Etapa 4.', 501));

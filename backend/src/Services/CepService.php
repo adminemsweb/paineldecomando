@@ -10,7 +10,7 @@ final class CepService
     private const BRASIL_API_BASE = 'https://brasilapi.com.br/api/cep/v1';
     private const VIA_CEP_BASE = 'https://viacep.com.br/ws';
 
-    /** @return array{cep:string,address:string,city:string,uf:string,options:array{}} */
+    /** @return array{cep:string,address:string,street:string,district:string,city:string,uf:string,options:array{}} */
     public function lookup(string $value): array
     {
         $cep = preg_replace('/\D/', '', $value) ?? '';
@@ -45,6 +45,8 @@ final class CepService
         return [
             'cep' => $cep,
             'address' => implode(', ', array_filter([$street, $district, "{$city}/{$uf}"])),
+            'street' => $street,
+            'district' => $district,
             'city' => $city,
             'uf' => $uf,
             'options' => [],

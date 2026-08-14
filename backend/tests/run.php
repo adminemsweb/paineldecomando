@@ -11,6 +11,9 @@ spl_autoload_register(static function (string $class): void {
 use App\Core\Logger;
 use App\Services\CepService;
 use App\Services\CorreiosService;
+use App\Repositories\AuthRepository;
+use App\Services\AuthService;
+use App\Validators\AuthValidator;
 use App\Validators\LeadValidator;
 
 $failures = [];
@@ -48,6 +51,35 @@ $test('CepService valida CEP antes de consultar o provedor', static function ():
         throw $exception;
     }
     throw new RuntimeException('CEP invalido foi aceito.');
+});
+
+$test('AuthValidator exige senha forte, telefone e consentimento', static function () use ($assert): void {
+    $errors = AuthValidator::registration(['name'=>'A','email'=>'invalido','phone'=>'123','password'=>'abc','consent'=>false]);
+    $assert(isset($errors['name'], $errors['email'], $errors['phone'], $errors['password'], $errors['consent']));
+});
+
+$test('AuthService cadastra cliente com senha e sessao protegidas', static function () use ($assert): void {
+    $pdo = new PDO('sqlite::memory:', options:[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo->exec("CREATE TABLE roles (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,slug TEXT NOT NULL UNIQUE,status TEXT NOT NULL); CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,email TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL,status TEXT NOT NULL,failed_login_attempts INTEGER NOT NULL DEFAULT 0,locked_until TEXT NULL,last_login_at TEXT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,deleted_at TEXT NULL); CREATE TABLE user_roles (user_id INTEGER NOT NULL,role_id INTEGER NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(user_id,role_id)); CREATE TABLE customer_profiles (user_id INTEGER PRIMARY KEY,company_name TEXT NULL,phone TEXT NOT NULL,lgpd_consent_at TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL); CREATE TABLE user_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,token_hash TEXT NOT NULL UNIQUE,expires_at TEXT NOT NULL,last_used_at TEXT NOT NULL,user_agent TEXT NULL,created_at TEXT NOT NULL,revoked_at TEXT NULL); CREATE TABLE customer_addresses (id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,label TEXT NOT NULL,recipient_name TEXT NOT NULL,postal_code TEXT NOT NULL,street TEXT NOT NULL,number TEXT NOT NULL,complement TEXT NULL,district TEXT NOT NULL,city TEXT NOT NULL,state TEXT NOT NULL,is_default INTEGER NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)");
+    $pdo->exec("INSERT INTO roles (name,slug,status) VALUES ('Cliente','customer','active')");
+    $service = new AuthService(new AuthRepository($pdo));
+    $result = $service->register(['name'=>'Maria Cliente','email'=>'MARIA@example.com','company'=>'Indústria Teste','phone'=>'(11) 99999-9999','password'=>'Senha123','consent'=>true], 'Teste');
+    $stored = $pdo->query("SELECT password_hash FROM users WHERE email='maria@example.com'")->fetchColumn();
+    $sessionHash = $pdo->query('SELECT token_hash FROM user_sessions')->fetchColumn();
+    $assert(is_string($stored) && $stored !== 'Senha123' && password_verify('Senha123', $stored), 'Senha não foi protegida corretamente.');
+    $assert(is_string($sessionHash) && $sessionHash === hash('sha256', $result['token']) && $sessionHash !== $result['token'], 'Token de sessão não foi protegido.');
+    $assert($service->currentUser($result['token'])['email'] === 'maria@example.com');
+    $updated = $service->updateProfile($result['token'], ['name'=>'Maria Atualizada','company'=>'Nova Empresa','phone'=>'11988887777','address'=>['postalCode'=>'18056340','street'=>'Rua Teste','number'=>'123','complement'=>'Sala 2','district'=>'Centro','city'=>'Sorocaba','state'=>'SP']]);
+    $assert($updated['name'] === 'Maria Atualizada' && $updated['address']['number'] === '123', 'Perfil e endereço não foram atualizados.');
+    $personalOnly = $service->updateProfile($result['token'], ['name'=>'Maria Atualizada','company'=>'Nova Empresa','phone'=>'11977776666']);
+    $assert($personalOnly['phone'] === '11977776666' && $personalOnly['address']['number'] === '123', 'Atualização dos dados pessoais alterou o endereço.');
+    $service->logout($result['token']);
+    $loggedOut = false;
+    try { $service->currentUser($result['token']); }
+    catch (Throwable) { $loggedOut = true; }
+    $assert($loggedOut, 'Sessão continuou ativa após logout.');
+    $login = $service->login(['email'=>'maria@example.com','password'=>'Senha123'], 'Teste');
+    $assert($login['user']['name'] === 'Maria Atualizada', 'Login não retornou os dados atualizados do cliente.');
 });
 
 $test('Logger grava JSON e remove segredos', static function () use ($assert): void {

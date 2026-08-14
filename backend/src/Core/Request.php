@@ -21,5 +21,10 @@ final class Request
     {
         return array_map(static fn($v) => is_string($v) ? trim($v) : '', $_GET);
     }
-}
 
+    public function cookie(string $name): string
+    {
+        $value = $_COOKIE[$name] ?? '';
+        return is_string($value) ? $value : '';
+    }
+}
