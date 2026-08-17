@@ -1,5 +1,5 @@
-import { FormEvent, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { FormEvent, useEffect, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ButtonLink } from '../components/common/ButtonLink';
 import { Icon } from '../components/common/Icon';
 import { PaymentIcon } from '../components/common/PaymentIcon';
@@ -21,14 +21,47 @@ const labels: Record<string, { eyebrow: string; title: string; body: string }> =
 
 export function ListingPage({ kind }: { kind: keyof typeof labels }) {
   const copy = labels[kind];
-  if (kind === 'produtos') return <StorefrontListing copy={copy}/>;
+  if (kind === 'produtos') return <ManagedStorefrontListing copy={copy}/>;
   return <><PageHero {...copy}/><section className="section"><div className="container empty-state"><span aria-hidden="true">⌁</span><h2>Conteúdo demonstrativo</h2><p>Os registros desta seção virão da API e serão administráveis. A base de rota, carregamento e integração está pronta para a próxima etapa.</p><ButtonLink to="/orcamento">Solicitar uma solução</ButtonLink></div></section></>;
 }
 
 export function DetailPage({ kind }: { kind: string }) {
   const { slug } = useParams();
   if (kind === 'produto' && slug === 'painel-estrela-triangulo') return <StarDeltaProduct/>;
+  if (kind === 'produto' && slug) return <ManagedProductDetail slug={slug}/>;
   return <><PageHero eyebrow="Detalhe técnico" title={slug?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') ?? kind} body={`Página individual de ${kind}, preparada para receber conteúdo da API.`}/><section className="section"><div className="container split"><div><h2>Informações da solução</h2><p>Características, aplicações, benefícios, especificações, mídia e relações serão exibidos aqui após o cadastro administrativo.</p></div><div><ButtonLink to={`/orcamento?interesse=${encodeURIComponent(slug ?? kind)}`}>Pedir orçamento</ButtonLink></div></div></section></>;
+}
+
+type ManagedProduct = { id:number; name:string; slug:string; summary?:string; description?:string; features?:string[]; benefits?:string[]; components?:string[]; voltages?:string; power_range?:string; protection_rating?:string; image_url?:string; gallery_images?:string[]; video_url?:string; video_urls?:string[]; category_name?:string; reference_code?:string; brand?:string; model?:string; price_cents?:number|null; installments?:number; stock_status?:'in_stock'|'out_of_stock'|'on_demand'; stock_quantity?:number; lead_time?:string; sales_channel?:'site'|'whatsapp'|'both'; warranty_days?:number };
+
+function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: string; body: string } }) {
+  const [products, setProducts] = useState<ManagedProduct[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { apiRequest<ManagedProduct[]>('/products?per_page=50').then(response => setProducts(response.data)).catch(() => setFailed(true)); }, []);
+  if (failed) return <StorefrontListing copy={copy}/>;
+  return <><PageHero {...copy}/><section className="store-catalog"><div className="container store-catalog__layout">
+    <aside className="store-filters"><span>Catálogo atualizado</span><h2>Encontre a configuração certa</h2><p>Os produtos publicados no painel administrativo aparecem automaticamente nesta página.</p><ButtonLink to="/orcamento" variant="secondary">Falar com a engenharia</ButtonLink></aside>
+    <div className="store-results"><div className="store-results__heading"><div><span>Soluções industriais</span><strong>{products === null ? 'Carregando…' : `${products.length} ${products.length === 1 ? 'produto publicado' : 'produtos publicados'}`}</strong></div></div>
+      {products?.length === 0 && <div className="empty-state"><h2>Nenhum produto publicado</h2><p>Os novos itens aparecerão aqui depois da publicação.</p></div>}
+      {products?.map(product => <article className="store-product-card" key={product.id}><Link className="store-product-card__image" to={`/produtos/${product.slug}`}><img src={product.image_url || '/images/hero-painel-comando-poster.jpg'} alt={product.name}/><span>Projeto sob consulta</span></Link><div className="store-product-card__body"><small>Marca Painel de Comando · Solução industrial</small><h2><Link to={`/produtos/${product.slug}`}>{product.name}</Link></h2><p>{product.summary || 'Consulte as configurações disponíveis para esta solução.'}</p><div><span><small>Condição</small><strong>Sob consulta</strong></span><ButtonLink to={`/produtos/${product.slug}`}>Ver produto</ButtonLink></div></div></article>)}
+    </div>
+  </div></section></>;
+}
+
+function ManagedProductDetail({ slug }: { slug: string }) {
+  const [product, setProduct] = useState<ManagedProduct | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { apiRequest<ManagedProduct>(`/products/${slug}`).then(response => setProduct(response.data)).catch(() => setFailed(true)); }, [slug]);
+  if (!product && !failed) return <div className="page-loader" role="status">Carregando produto…</div>;
+  if (failed) {
+    if (slug === 'painel-estrela-triangulo') return <StarDeltaProduct/>;
+    return <><PageHero eyebrow="Produto" title="Produto não encontrado" body="Este produto não está publicado ou não existe mais."/><section className="section"><div className="container"><ButtonLink to="/produtos">Voltar ao catálogo</ButtonLink></div></section></>;
+  }
+  const current = product!;
+  return <><PageHero eyebrow="Solução industrial" title={current.name} body={current.summary || 'Projeto desenvolvido conforme os requisitos da aplicação.'}/><section className="section"><div className="container managed-product-detail">
+    <div className="managed-product-detail__image"><img src={current.image_url || '/images/hero-painel-comando-poster.jpg'} alt={current.name}/></div>
+    <article><span className="eyebrow">Informações técnicas</span><h2>Sobre este produto</h2><p>{current.description || current.summary}</p><dl>{current.voltages && <div><dt>Tensões</dt><dd>{current.voltages}</dd></div>}{current.power_range && <div><dt>Potência</dt><dd>{current.power_range}</dd></div>}{current.protection_rating && <div><dt>Proteção</dt><dd>{current.protection_rating}</dd></div>}</dl>{current.features?.length ? <><h3>Características</h3><ul>{current.features.map(item => <li key={item}>{item}</li>)}</ul></> : null}{current.benefits?.length ? <><h3>Benefícios</h3><ul>{current.benefits.map(item => <li key={item}>{item}</li>)}</ul></> : null}<ButtonLink to={`/orcamento?interesse=${encodeURIComponent(current.slug)}`}>Solicitar orçamento</ButtonLink></article>
+  </div></section></>;
 }
 
 function StorefrontListing({ copy }: { copy: { eyebrow: string; title: string; body: string } }) {
@@ -45,12 +78,29 @@ function RatingStars({ rating }: { rating: number }) {
 }
 
 function StarDeltaProduct() {
-  const [media, setMedia] = useState<'video' | 'principal' | 'open' | 'closed'>('principal');
+  const [media, setMedia] = useState('photo-0');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'warranty' | 'payment' | 'reviews'>('description');
+  const [managed, setManaged] = useState<ManagedProduct | null>(null);
+  useEffect(() => { apiRequest<ManagedProduct>('/products/painel-estrela-triangulo').then(response => setManaged(response.data)).catch(() => undefined); }, []);
+  const productName = managed?.name || 'Painel Estrela Triângulo 15CV 220V Man/Aut. Eco';
+  const principalImage = managed?.image_url || '/images/painel-estrela-triangulo-15cv-principal.png';
+  const photoUrls = managed ? [principalImage, ...(managed.gallery_images || [])].slice(0, 5) : [principalImage, '/images/painel-estrela-triangulo-15cv-fechado-logo.png', '/images/painel-estrela-triangulo-15cv-aberto-amarelo.png'];
+  const videoUrls = managed ? (managed.video_urls?.length ? managed.video_urls : managed.video_url ? [managed.video_url] : []).slice(0, 2) : ['/videos/painelvideo.mp4'];
+  const price = managed?.price_cents == null ? 'Sob consulta' : (managed.price_cents / 100).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  const installments = Math.max(1, managed?.installments || 3);
+  const installmentPrice = managed?.price_cents == null ? null : (managed.price_cents / installments / 100).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  const isOutOfStock = managed?.stock_status === 'out_of_stock' || (managed?.stock_status === 'in_stock' && (managed.stock_quantity ?? 0) < 1);
+  const stockText = isOutOfStock ? 'Produto sem estoque' : managed?.lead_time || (managed?.stock_status === 'on_demand' ? 'Produção sob encomenda' : 'Disponível em 3 dias úteis');
+  const canBuyOnSite = managed?.sales_channel !== 'whatsapp' && !isOutOfStock && managed?.price_cents != null;
+  const canBuyOnWhatsapp = managed?.sales_channel !== 'site';
+  const maxQuantity = managed?.stock_status === 'in_stock' ? Math.max(1, managed.stock_quantity ?? 1) : 999;
   const technicalFeatures = ['Tensão: 220 V trifásico', 'Corrente: 40 A', 'Potência do motor: até 15 CV', 'Sistema: Estrela-Triângulo', 'Acionamento: Manual e Automático', 'Construção: caixa metálica reforçada com pintura eletrostática', 'Montagem: trilho DIN e canaletas industriais de alta qualidade'];
   const components = ['Caixa de comando metálica robusta', 'Contatores de potência: 25 A + 18 A (220 V)', 'Relé de sobrecarga: 22–32 A', 'Mini disjuntor tripolar: 63 A', 'Relé temporizador para controle da transição estrela-triângulo', 'Canaletas, trilho DIN e bornes industriais de alta durabilidade'];
   const benefits = ['Reduz a corrente de partida e o estresse do motor', 'Prolonga a vida útil do sistema elétrico', 'Protege contra curtos-circuitos e sobrecargas', 'Instalação prática e manutenção simplificada', 'Equipamento funcional, confiável e com excelente custo-benefício'];
+  const managedFeatures = managed?.features?.length ? managed.features : technicalFeatures;
+  const managedComponents = managed?.components?.length ? managed.components : components;
+  const managedBenefits = managed?.benefits?.length ? managed.benefits : benefits;
   const reviews = [
     { name: 'Marcos A.', initials: 'MA', rating: 5, title: 'Produto conforme a especificação', text: 'Painel bem montado, com acabamento organizado e funcionamento de acordo com o esperado.', image: '/images/painel-estrela-triangulo-15cv-fechado-logo.png' },
     { name: 'Renato S.', initials: 'RS', rating: 4, title: 'Boa construção e acabamento', text: 'Equipamento funcional e bem protegido. A apresentação interna facilitou a conferência dos componentes.', image: '/images/painel-estrela-triangulo-15cv-aberto-amarelo.png' },
@@ -71,31 +121,27 @@ function StarDeltaProduct() {
         <div className="product-gallery">
           <div className="product-gallery__layout">
             <div className="product-gallery__thumbs" aria-label="Mídia do produto">
-              <button type="button" className={media === 'principal' ? 'active' : ''} aria-pressed={media === 'principal'} onClick={() => setMedia('principal')}><img src="/images/painel-estrela-triangulo-15cv-principal.png" alt=""/><span>Principal</span></button>
-              <button type="button" className={media === 'closed' ? 'active' : ''} aria-pressed={media === 'closed'} onClick={() => setMedia('closed')}><img src="/images/painel-estrela-triangulo-15cv-fechado-logo.png" alt=""/><span>Fechado</span></button>
-              <button type="button" className={media === 'open' ? 'active' : ''} aria-pressed={media === 'open'} onClick={() => setMedia('open')}><img src="/images/painel-estrela-triangulo-15cv-aberto-amarelo.png" alt=""/><span>Aberto</span></button>
-              <button type="button" className={media === 'video' ? 'active' : ''} aria-pressed={media === 'video'} onClick={() => setMedia('video')}><img src="/images/painel-estrela-triangulo-15cv-principal.png" alt=""/><span>Vídeo</span></button>
+              {photoUrls.map((url, index) => <button type="button" className={media === `photo-${index}` ? 'active' : ''} aria-pressed={media === `photo-${index}`} onClick={() => setMedia(`photo-${index}`)} key={`photo-${url}-${index}`}><img src={url} alt=""/><span>{index === 0 ? 'Principal' : `Foto ${index + 1}`}</span></button>)}
+              {videoUrls.map((_, index) => <button type="button" className={media === `video-${index}` ? 'active' : ''} aria-pressed={media === `video-${index}`} onClick={() => setMedia(`video-${index}`)} key={`video-${index}`}><img src={principalImage} alt=""/><span>Vídeo {index + 1}</span></button>)}
             </div>
             <div className="product-gallery__stage">
-              {media === 'video' && <video autoPlay loop muted playsInline controls poster="/images/painel-estrela-triangulo-15cv-principal.png" aria-label="Vídeo demonstrativo do Painel Estrela-Triângulo 15 CV"><source src="/videos/painelvideo.mp4" type="video/mp4"/></video>}
-              {media === 'principal' && <img src="/images/painel-estrela-triangulo-15cv-principal.png" alt="Painel Estrela-Triângulo 15 CV aberto com fundo interno amarelo e identificação Painel de Comando"/>}
-              {media === 'open' && <img src="/images/painel-estrela-triangulo-15cv-aberto-amarelo.png" alt="Painel Estrela-Triângulo aberto em vista lateral com fundo interno amarelo"/>}
-              {media === 'closed' && <img src="/images/painel-estrela-triangulo-15cv-fechado-logo.png" alt="Painel Estrela-Triângulo fechado com identificação Painel de Comando"/>}
+              {media.startsWith('video-') ? <video autoPlay loop muted playsInline controls poster={principalImage} aria-label={`Vídeo demonstrativo de ${productName}`} src={videoUrls[Number(media.split('-')[1])]}/> : <img src={photoUrls[Number(media.split('-')[1])] || principalImage} alt={media === 'photo-0' ? productName : `${productName}, foto ${Number(media.split('-')[1]) + 1}`}/>} 
             </div>
           </div>
         </div>
 
         <div className="product-summary">
-          <div className="product-summary__topline"><span className="product-summary__category">Painéis de partida</span><span>Ref: PAINEL-E.T-15CV+MAN-AUT.ECO</span></div>
-          <h1>Painel Estrela Triângulo 15CV 220V Man/Aut. Eco | Painel de Comando</h1>
+          <div className="product-summary__topline"><span className="product-summary__category">{managed?.category_name || 'Painéis de partida'}</span><span>Ref: {managed?.reference_code || 'PAINEL-E.T-15CV+MAN-AUT.ECO'}</span></div>
+          <h1>{productName} | {managed?.brand || 'Painel de Comando'}</h1>
           <div className="product-rating-summary"><RatingStars rating={averageRating}/><strong>{averageRating.toFixed(1).replace('.', ',')}</strong><button type="button" onClick={() => setActiveTab('reviews')}>{reviewRatings.length} avaliações</button></div>
-          <dl className="product-summary__meta"><div><dt>Marca</dt><dd>Painel de Comando</dd></div><div><dt>Modelo</dt><dd>Painel Estrela Triângulo</dd></div><div><dt>Disponibilidade</dt><dd className="product-stock">Disponível em 3 dias úteis</dd></div><div><dt>Garantia</dt><dd>365 dias</dd></div></dl>
+          <dl className="product-summary__meta"><div><dt>Marca</dt><dd>{managed?.brand || 'Painel de Comando'}</dd></div><div><dt>Modelo</dt><dd>{managed?.model || 'Painel Estrela Triângulo'}</dd></div><div><dt>Disponibilidade</dt><dd className={isOutOfStock ? 'product-stock product-stock--out' : 'product-stock'}>{stockText}</dd></div><div><dt>Garantia</dt><dd>{managed?.warranty_days ?? 365} dias</dd></div></dl>
 
           <div className="product-buybox">
-            <div className="product-buybox__price"><span>Preço à vista</span><strong>R$ 1.247,00</strong><small>ou 3x de R$ 415,67 sem juros</small></div>
-            <div className="product-buybox__quantity"><span>Quantidade</span><div><button type="button" aria-label="Diminuir quantidade" onClick={() => setQuantity(current => Math.max(1, current - 1))}>−</button><strong>{quantity}</strong><button type="button" aria-label="Aumentar quantidade" onClick={() => setQuantity(current => current + 1)}>+</button></div></div>
-            <ButtonLink to={`/carrinho?produto=painel-estrela-triangulo-15cv-220v&quantidade=${quantity}`}>Comprar agora</ButtonLink>
-            <a className="product-buybox__whatsapp" href={`https://wa.me/${companyConfig.whatsapp}?text=${encodeURIComponent(`Olá! Quero comprar ${quantity} Painel Estrela Triângulo 15CV 220V Man/Aut. Eco.`)}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={18}/> Comprar pelo WhatsApp</a>
+            <div className="product-buybox__price"><span>Preço à vista</span><strong>{price}</strong>{installmentPrice && <small>ou {installments}x de {installmentPrice} sem juros</small>}</div>
+            <div className="product-buybox__quantity"><span>Quantidade</span><div><button type="button" aria-label="Diminuir quantidade" onClick={() => setQuantity(current => Math.max(1, current - 1))}>−</button><strong>{quantity}</strong><button type="button" aria-label="Aumentar quantidade" disabled={quantity >= maxQuantity} onClick={() => setQuantity(current => Math.min(maxQuantity, current + 1))}>+</button></div></div>
+            {canBuyOnSite && <ButtonLink to={`/carrinho?produto=${encodeURIComponent(managed?.slug || 'painel-estrela-triangulo')}&quantidade=${quantity}`}>Comprar agora</ButtonLink>}
+            {canBuyOnWhatsapp && <a className="product-buybox__whatsapp" href={`https://wa.me/${companyConfig.whatsapp}?text=${encodeURIComponent(`Olá! Quero comprar ${quantity} ${productName}.`)}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={18}/> Comprar pelo WhatsApp</a>}
+            {isOutOfStock && <div className="product-out-of-stock" role="status">Produto indisponível no momento</div>}
             <ShippingCalculator variant="product"/>
           </div>
         </div>
@@ -103,7 +149,7 @@ function StarDeltaProduct() {
     </div></section>
     <section className="product-information"><div className="container"><div className="product-tabs" role="tablist" aria-label="Informações do produto"><button type="button" className={activeTab === 'description' ? 'active' : ''} onClick={() => setActiveTab('description')}>Descrição geral</button><button type="button" className={activeTab === 'warranty' ? 'active' : ''} onClick={() => setActiveTab('warranty')}>Garantia</button><button type="button" className={activeTab === 'payment' ? 'active' : ''} onClick={() => setActiveTab('payment')}>Formas de pagamento</button><button type="button" className={activeTab === 'reviews' ? 'active' : ''} onClick={() => setActiveTab('reviews')}>Avaliações ({reviewRatings.length})</button></div>
       <div className="product-tab-panel">
-        {activeTab === 'description' && <div className="product-long-description"><header><span>Excelência em engenharia e qualidade</span><h2>Painel Estrela Triângulo 15CV 220V Man/Aut. Eco</h2><p>Os produtos comercializados pela Painel de Comando são selecionados com foco em responsabilidade técnica, qualidade e testes funcionais antes do envio. Cada equipamento busca garantir segurança, desempenho e durabilidade para aplicações industriais.</p><p>O Painel de Comando Estrela-Triângulo 15CV 220V foi projetado para oferecer partidas seguras, suaves e eficientes de motores trifásicos. Seu sistema reduz significativamente a corrente de partida, ajuda a evitar picos de energia e protege o motor contra sobrecargas e curtos-circuitos.</p><p>Compacto e funcional, o modelo ECO oferece equilíbrio entre praticidade, segurança e custo-benefício.</p></header><div className="product-description-columns"><article><h3>Características técnicas</h3><ul>{technicalFeatures.map(item => <li key={item}>{item}</li>)}</ul></article><article><h3>Principais componentes</h3><ul>{components.map(item => <li key={item}>{item}</li>)}</ul></article><article><h3>Benefícios e diferenciais</h3><ul>{benefits.map(item => <li key={item}>{item}</li>)}</ul></article></div><section><h3>Personalização sob medida</h3><p>Precisa adaptar o painel ao seu projeto? A Painel de Comando oferece orientação para personalização técnica sob demanda, buscando compatibilidade, desempenho e segurança para a aplicação.</p><ButtonLink to="/orcamento?interesse=painel-estrela-triangulo-15cv">Solicitar modelo personalizado</ButtonLink></section><section><h3>Instalação e uso técnico</h3><p>Por se tratar de equipamento técnico, a instalação e o manuseio devem ser realizados por profissional qualificado, garantindo o desempenho do produto e a segurança da aplicação. O suporte pós-venda está disponível para orientações comerciais e de uso geral; dúvidas específicas de instalação devem ser direcionadas a profissional habilitado da área elétrica.</p></section><aside><strong>Atenção</strong><p>Os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos utiliza flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com aperto manual.</p></aside></div>}
+        {activeTab === 'description' && <div className="product-long-description"><header><span>Excelência em engenharia e qualidade</span><h2>{productName}</h2><p>{managed?.description || 'Os produtos comercializados pela Painel de Comando são selecionados com foco em responsabilidade técnica, qualidade e testes funcionais antes do envio. Cada equipamento busca garantir segurança, desempenho e durabilidade para aplicações industriais.'}</p></header><div className="product-description-columns"><article><h3>Características técnicas</h3><ul>{managedFeatures.map(item => <li key={item}>{item}</li>)}</ul></article><article><h3>Principais componentes</h3><ul>{managedComponents.map(item => <li key={item}>{item}</li>)}</ul></article><article><h3>Benefícios e diferenciais</h3><ul>{managedBenefits.map(item => <li key={item}>{item}</li>)}</ul></article></div><section><h3>Personalização sob medida</h3><p>Precisa adaptar o painel ao seu projeto? A Painel de Comando oferece orientação para personalização técnica sob demanda, buscando compatibilidade, desempenho e segurança para a aplicação.</p><ButtonLink to="/orcamento?interesse=painel-estrela-triangulo-15cv">Solicitar modelo personalizado</ButtonLink></section><section><h3>Instalação e uso técnico</h3><p>Por se tratar de equipamento técnico, a instalação e o manuseio devem ser realizados por profissional qualificado, garantindo o desempenho do produto e a segurança da aplicação.</p></section></div>}
         {activeTab === 'warranty' && <div className="product-policy"><h2>1 ano após o recebimento do produto</h2><p>Todos os produtos comercializados pela Painel de Comando possuem garantia contra defeitos de fabricação, conforme as condições estabelecidas pelo fabricante. O prazo deste produto é de 365 dias.</p><div className="product-description-columns"><article><h3>Acionamento da garantia</h3><p>Caso seja identificado algum defeito, entre em contato com a equipe para receber orientação. O produto poderá passar por análise técnica antes da aprovação da garantia.</p></article><article><h3>Condições importantes</h3><ul><li>Cobre exclusivamente defeitos de fabricação</li><li>Não cobre mau uso, instalação incorreta ou desgaste natural</li><li>A instalação deve ser realizada por profissional qualificado</li></ul></article><article><h3>Trocas e devoluções</h3><p>O produto deve ser enviado em sua embalagem original e sem sinais de uso indevido. Caso seja constatado mau uso, os custos de envio e reparo serão de responsabilidade do comprador.</p></article></div><h3>Suporte técnico</h3><p>Em caso de dúvidas, nossa equipe está disponível para orientar e buscar a melhor solução para sua aplicação.</p></div>}
         {activeTab === 'payment' && <div className="product-payment-options"><header><div><span>Compra segura e transparente</span><h2>Escolha como deseja pagar</h2><p>Confira valores e condições antes de concluir o pedido.</p></div><div className="product-payment-price"><small>Valor do produto</small><strong>R$ 1.247,00</strong><span>ou 3x de R$ 415,67 sem juros</span></div></header><div className="product-payment-brands" aria-label="Meios de pagamento aceitos"><strong>Meios aceitos</strong><span className="payment-card" aria-label="Mastercard"><PaymentIcon name="mastercard"/></span><span className="payment-card" aria-label="Visa"><PaymentIcon name="visa"/></span><span className="payment-card payment-card--brand-wide" aria-label="Hipercard"><PaymentIcon name="hipercard"/></span><span className="payment-card" aria-label="Elo"><PaymentIcon name="elo"/></span><span className="payment-card payment-card--labeled payment-card--wide" aria-label="Pagamento parcelado"><PaymentIcon name="installment"/><b>Pagamento parcelado</b></span><span className="payment-card" aria-label="Pix"><PaymentIcon name="pix"/></span><span className="payment-card" aria-label="PayPal"><PaymentIcon name="paypal"/></span><span className="payment-card payment-card--brand-wide" aria-label="Google Pay"><PaymentIcon name="googlepay"/></span><span className="payment-card payment-card--labeled" aria-label="Boleto"><PaymentIcon name="boleto"/><b>Boleto</b></span><span className="payment-card payment-card--brand-wide" aria-label="PicPay"><PaymentIcon name="picpay"/></span></div><div className="product-payment-methods"><article><span className="product-payment-methods__icon"><PaymentIcon name="pix"/></span><div><small>À vista</small><strong>Pix ou depósito bancário</strong><p>Os dados para pagamento são confirmados no fechamento.</p></div></article><article><span className="product-payment-methods__icon"><PaymentIcon name="mastercard"/></span><div><small>Cartão de crédito</small><strong>Até 3x sem juros</strong><p>Três parcelas de R$ 415,67 no cartão.</p></div></article><article><span className="product-payment-methods__icon"><PaymentIcon name="boleto"/></span><div><small>Boleto bancário</small><strong>Pagamento à vista</strong><p>A confirmação ocorre após a compensação bancária.</p></div></article></div><div className="product-payment-security"><div><Icon name="shield" size={21}/><span><strong>Pagamento protegido</strong><small>Você revisa os dados antes de confirmar</small></span></div><div><Icon name="check" size={21}/><span><strong>Condições transparentes</strong><small>Valor e parcelamento apresentados com clareza</small></span></div><div><Icon name="headset" size={21}/><span><strong>Suporte no atendimento</strong><small>Equipe disponível para orientar sua compra</small></span></div></div><small className="product-payment-note">Nenhuma cobrança é realizada sem sua confirmação. As condições finais são apresentadas no fechamento do pedido.</small></div>}
         {activeTab === 'reviews' && <div className="product-reviews"><header><span>Opinião de compradores</span><h2>Avaliações do produto</h2><p>A média é calculada automaticamente a partir de todas as notas recebidas.</p></header><div className="product-reviews__content"><aside className="product-reviews__summary"><small>Nota média</small><strong>{averageRating.toFixed(1).replace('.', ',')}</strong><RatingStars rating={averageRating}/><p>Baseado em {reviewRatings.length} avaliações</p><div className="product-reviews__sentiment"><span><b>{positiveReviews}</b> positivas</span><span><b>{negativeReviews}</b> negativas</span></div><div className="product-reviews__bars">{[5, 4, 3, 2, 1].map(score => { const total = reviewRatings.filter(rating => rating === score).length; return <div key={score}><b>{score}</b><span><i style={{ width: `${(total / reviewRatings.length) * 100}%` }}/></span><small>{total}</small></div>; })}</div></aside><div className="product-reviews__grid">{reviews.map((review, index) => <article key={review.name}><header><span className="product-reviewer__avatar" aria-hidden="true">{review.initials}</span><div><strong>{review.name}</strong><small>Conteúdo demonstrativo</small></div></header><div className="product-review__rating"><RatingStars rating={review.rating}/><b>{review.rating.toFixed(1).replace('.', ',')}</b></div><h3>{review.title}</h3><p>“{review.text}”</p><figure><img src={review.image} alt={`Imagem do produto anexada à avaliação ${index + 1}`}/><figcaption>Imagem anexada à avaliação</figcaption></figure></article>)}</div></div><div className="product-reviews__login"><Icon name="user" size={24}/><div><strong>Já comprou este produto?</strong><span>Entre na sua conta para compartilhar sua experiência.</span></div><Link className="button" to="/conta?retorno=/produtos/painel-estrela-triangulo#avaliacoes">Entrar para avaliar</Link></div></div>}
@@ -114,6 +160,50 @@ function StarDeltaProduct() {
 
 export function CartPage() {
   return <section className="cart-page"><div className="container"><div className="cart-page__heading"><span className="eyebrow">Sua seleção</span><h1>Carrinho</h1></div><div className="cart-empty"><span aria-hidden="true">00</span><div><h2>Seu carrinho está vazio.</h2><p>Os produtos padronizados aparecerão aqui quando preços, estoque e condições comerciais forem cadastrados. Para um painel sob medida, inicie uma cotação técnica.</p><div className="button-row"><ButtonLink to="/produtos">Explorar produtos</ButtonLink><ButtonLink to="/orcamento" variant="secondary">Solicitar cotação</ButtonLink></div></div></div></div></section>;
+}
+
+export function ForgotPasswordPage() {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [developmentUrl, setDevelopmentUrl] = useState('');
+
+  async function requestRecovery(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true); setError(''); setDevelopmentUrl('');
+    try {
+      const response = await apiRequest<{ development_reset_url?: string; email_sent?: boolean } | null>('/auth/forgot-password', { method:'POST', body:JSON.stringify({ email }) });
+      setDevelopmentUrl(response.data?.development_reset_url ?? '');
+      setSent(true);
+    } catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível solicitar a recuperação.'); }
+    finally { setSubmitting(false); }
+  }
+
+  return <section className="password-recovery"><div className="container password-recovery__layout">
+    <div className="password-recovery__intro"><span className="eyebrow">Recuperação de acesso</span><h1>Esqueceu sua senha?</h1><p>Informe o e-mail usado no cadastro. Você receberá um link seguro para criar uma nova senha.</p><div><Icon name="shield" size={22}/><span><strong>Proteção da sua conta</strong><small>O link expira em 1 hora e só pode ser utilizado uma vez.</small></span></div></div>
+    <form className="password-recovery__card" onSubmit={requestRecovery}><span>Área do cliente</span><h2>Receber link por e-mail</h2><p>As instruções serão enviadas por <strong>sistema@paineldecomando.com.br</strong>.</p><label>E-mail de acesso<input type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" placeholder="seuemail@empresa.com.br" autoFocus/></label>{error && <div className="account-form__error" role="alert">{error}</div>}{sent && <div className="account-form__notice" role="status">Se este e-mail estiver cadastrado, as instruções de recuperação serão enviadas.</div>}{developmentUrl && <a className="password-recovery__dev-link" href={developmentUrl}>Abrir link de teste local</a>}<button className="button button--primary" type="submit" disabled={submitting}>{submitting ? 'Enviando…' : 'Enviar link de recuperação'}</button><Link to="/conta">Voltar para entrar</Link><footer><Icon name="lock" size={16}/><span>Nunca enviaremos sua senha. Você criará uma nova pelo link recebido.</span></footer></form>
+  </div></section>;
+}
+
+export function ResetPasswordPage() {
+  const [params] = useSearchParams();
+  const token = params.get('token') ?? '';
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setSubmitting(true); setError('');
+    const data = new FormData(event.currentTarget);
+    try {
+      await apiRequest<null>('/auth/reset-password', { method:'POST', body:JSON.stringify({ token, password:data.get('password'), password_confirmation:data.get('password_confirmation') }) });
+      setSuccess(true);
+    } catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível alterar sua senha.'); }
+    finally { setSubmitting(false); }
+  }
+
+  return <section className="password-recovery"><div className="container password-recovery__layout"><div className="password-recovery__intro"><span className="eyebrow">Nova senha</span><h1>Crie uma senha segura.</h1><p>Use pelo menos 8 caracteres, combinando letras e números.</p></div><form className="password-recovery__card" onSubmit={submit}><span>Área do cliente</span><h2>Redefinir senha</h2>{success ? <><div className="account-form__notice" role="status">Senha alterada com sucesso.</div><Link className="button button--primary" to="/conta">Entrar na minha conta</Link></> : <><label>Nova senha<input name="password" type="password" required minLength={8} autoComplete="new-password"/></label><label>Confirmar nova senha<input name="password_confirmation" type="password" required minLength={8} autoComplete="new-password"/></label>{error && <div className="account-form__error" role="alert">{error}</div>}<button className="button button--primary" type="submit" disabled={submitting || token === ''}>{submitting ? 'Salvando…' : 'Criar nova senha'}</button>{token === '' && <div className="account-form__error" role="alert">Este link de recuperação está incompleto.</div>}</>}<footer><Icon name="lock" size={16}/><span>Depois da alteração, as sessões antigas serão encerradas.</span></footer></form></div></section>;
 }
 
 export function AccountPage() {
@@ -230,7 +320,7 @@ export function AccountPage() {
       <form className="form account-form" onSubmit={submit}>
         {accountMode === 'register' && <div className="account-form__grid"><label>Nome completo<input name="name" required maxLength={150} autoComplete="name" placeholder="Digite seu nome"/></label><label>Empresa <small>(opcional)</small><input name="company" maxLength={190} autoComplete="organization" placeholder="Nome da empresa"/></label><label className="account-form__wide">Telefone<input name="phone" required maxLength={20} autoComplete="tel" inputMode="tel" placeholder="(00) 00000-0000"/></label></div>}
         <label>E-mail<input name="email" type="email" required maxLength={190} autoComplete="username" placeholder="seuemail@empresa.com.br"/></label>
-        <label>Senha{accountMode === 'login' && <Link to="/contato">Esqueci minha senha</Link>}<input name="password" type="password" required minLength={8} autoComplete={accountMode === 'login' ? 'current-password' : 'new-password'} placeholder="Mínimo de 8 caracteres"/></label>
+        <label>Senha{accountMode === 'login' && <Link to="/conta/recuperar-senha">Esqueci minha senha</Link>}<input name="password" type="password" required minLength={8} autoComplete={accountMode === 'login' ? 'current-password' : 'new-password'} placeholder="Mínimo de 8 caracteres"/></label>
         {accountMode === 'register' && <label className="account-form__consent"><input name="consent" type="checkbox" required/><span>Li e concordo com a <Link to="/politica-de-privacidade">Política de Privacidade</Link>.</span></label>}
         <button className="button button--primary account-form__submit" type="submit" disabled={submitting}>{submitting ? 'Aguarde…' : accountMode === 'login' ? 'Entrar na minha conta' : 'Criar minha conta'}{!submitting && <Icon name="arrow" size={18}/>}</button>
         {formError && <div className="account-form__error" role="alert">{formError}</div>}

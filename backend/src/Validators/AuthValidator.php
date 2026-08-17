@@ -33,6 +33,25 @@ final class AuthValidator
     }
 
     /** @param array<string,mixed> $data @return array<string,list<string>> */
+    public static function forgotPassword(array $data): array
+    {
+        $email = strtolower(trim((string)($data['email'] ?? '')));
+        return !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190 ? ['email'=>['Informe um e-mail válido.']] : [];
+    }
+
+    /** @param array<string,mixed> $data @return array<string,list<string>> */
+    public static function resetPassword(array $data): array
+    {
+        $errors = [];
+        $token = (string)($data['token'] ?? '');
+        $password = (string)($data['password'] ?? '');
+        if (strlen($token) !== 64 || !ctype_xdigit($token)) $errors['token'][] = 'O link de recuperação é inválido.';
+        if (strlen($password) < 8 || !preg_match('/[A-Za-z]/', $password) || !preg_match('/\d/', $password)) $errors['password'][] = 'Use pelo menos 8 caracteres, com letras e números.';
+        if ($password !== (string)($data['password_confirmation'] ?? '')) $errors['password_confirmation'][] = 'As senhas não coincidem.';
+        return $errors;
+    }
+
+    /** @param array<string,mixed> $data @return array<string,list<string>> */
     public static function profile(array $data): array
     {
         $errors = [];

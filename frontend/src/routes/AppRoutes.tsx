@@ -2,7 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { PublicLayout } from '../components/layout/PublicLayout';
-import { AccountPage, AdminPage, BuyerPolicyPage, CartPage, CompanyPage, ContactPage, DetailPage, LegalPage, ListingPage, LoginPage, NotFoundPage, QuotePage } from '../pages/PublicPages';
+import { AccountPage, BuyerPolicyPage, CartPage, CompanyPage, ContactPage, DetailPage, ForgotPasswordPage, LegalPage, ListingPage, NotFoundPage, QuotePage, ResetPasswordPage } from '../pages/PublicPages';
+import { AdminDashboardPage, AdminLoginPage, AdminPlaceholderPage, AdminProductsPage } from '../pages/AdminPages';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const sections = ['Produtos', 'Categorias', 'Segmentos', 'Serviços', 'Projetos', 'Posts', 'Leads', 'Configurações'];
@@ -19,11 +20,13 @@ export function AppRoutes() {
       <Route path="orcamento" element={<QuotePage/>}/><Route path="contato" element={<ContactPage/>}/>
       <Route path="carrinho" element={<CartPage/>}/>
       <Route path="conta" element={<AccountPage/>}/>
+      <Route path="conta/recuperar-senha" element={<ForgotPasswordPage/>}/>
+      <Route path="conta/redefinir-senha" element={<ResetPasswordPage/>}/>
       <Route path="trocas-e-devolucoes" element={<BuyerPolicyPage kind="returns"/>}/><Route path="garantia" element={<BuyerPolicyPage kind="warranty"/>}/>
       <Route path="politica-de-privacidade" element={<LegalPage/>}/><Route path="termos-de-uso" element={<LegalPage terms/>}/><Route path="*" element={<NotFoundPage/>}/>
     </Route>
-    <Route path="admin/login" element={<LoginPage/>}/>
-    <Route path="admin" element={<AdminLayout/>}><Route index element={<AdminPage/>}/>{sections.map(section => <Route key={section} path={section.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '')} element={<AdminPage section={section}/>}/>)}</Route>
+    <Route path="admin/login" element={<AdminLoginPage/>}/>
+    <Route path="admin" element={<AdminLayout/>}><Route index element={<AdminDashboardPage/>}/><Route path="produtos" element={<AdminProductsPage/>}/>{sections.filter(section => section !== 'Produtos').map(section => <Route key={section} path={section.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '')} element={<AdminPlaceholderPage section={section}/>}/>)}</Route>
     <Route path="/solucoes" element={<Navigate to="/produtos" replace/>}/>
   </Routes></Suspense>;
 }

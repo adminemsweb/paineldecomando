@@ -51,4 +51,5 @@ $router->post('/api/v1/auth/login', static fn(Request $request) => $authControll
 $router->get('/api/v1/auth/me', static fn(Request $request) => $authController()->me($request));
 $router->post('/api/v1/auth/profile', static fn(Request $request) => $authController()->updateProfile($request));
 $router->post('/api/v1/auth/logout', static fn(Request $request) => $authController()->logout($request));
-$router->post('/api/v1/auth/forgot-password', static fn() => Response::error('Recuperação será habilitada na Etapa 4.', 501));
+$router->post('/api/v1/auth/forgot-password', static fn(Request $request) => $authController()->forgotPassword($request));
+$router->post('/api/v1/auth/reset-password', static fn(Request $request) => $authController()->resetPassword($request));

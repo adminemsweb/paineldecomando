@@ -12,4 +12,6 @@ backend/public/uploads/*
 !backend/public/uploads/.gitkeep
 backend/storage/logs/*
 !backend/storage/logs/.gitkeep
+backend/storage/rate-limits/
+backend/storage/*.sqlite
 tmp/

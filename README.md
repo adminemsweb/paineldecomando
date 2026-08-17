@@ -18,6 +18,10 @@ docker compose up --build
 
 Sem Docker, execute `npm install && npm run dev` em `frontend`. Para a API, configure `backend/.env`, importe `database/schema.sql` e aponte um servidor PHP cujo document root seja `backend/public`.
 
+### Painel administrativo local
+
+Com a configuração SQLite de desenvolvimento, prepare o banco com `php backend/bin/setup-local.php`, inicie a API apontando o document root para `backend/public` e acesse `http://localhost:5173/admin/login`. As credenciais iniciais são definidas por `ADMIN_EMAIL` e `ADMIN_PASSWORD` no arquivo local `backend/.env`; troque a senha antes de disponibilizar o painel em uma rede.
+
 ## Comandos de qualidade
 
 ```bash
@@ -43,3 +47,15 @@ docker compose --env-file .env.production -f docker-compose.prod.yml up -d --bui
 ```
 
 O build de produção bloqueia placeholders de telefone, WhatsApp, endereço e horário. A API gera logs JSON estruturados com `request_id` e remoção de segredos.
+
+## Logs locais
+
+Use `Ctrl + Shift + B` no VS Code e execute **Iniciar Painel de Comando (com logs)**. O backend mostra cada requisição em tempo real com estas cores:
+
+- verde: sucesso e respostas `2xx`;
+- azul/ciano: informação e redirecionamento;
+- amarelo: aviso, validação e respostas `4xx`;
+- vermelho: erro interno e respostas `5xx`;
+- magenta: autenticação, bloqueios e outros eventos de segurança.
+
+Os mesmos registros são gravados em JSON em `backend/storage/logs`, sem senhas, tokens, cookies, e-mails ou telefones. `LOG_CONSOLE=false` desativa a saída no terminal e `LOG_COLORS=false` mantém os registros sem cores.

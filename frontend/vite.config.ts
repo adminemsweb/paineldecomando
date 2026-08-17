@@ -5,7 +5,10 @@ export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
     port: 5173,
-    proxy: { '/api': { target: 'http://localhost:8080', changeOrigin: true } },
+    proxy: {
+      '/api': { target: 'http://localhost:8080', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:8080', changeOrigin: true },
+    },
   },
   build: { target: 'es2022', sourcemap: mode !== 'production' },
 }));

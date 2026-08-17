@@ -1,0 +1,14 @@
+ALTER TABLE products ADD COLUMN components JSON NULL AFTER benefits;
+ALTER TABLE products ADD COLUMN gallery_images JSON NULL AFTER featured_image;
+ALTER TABLE products ADD COLUMN video_url VARCHAR(255) NULL AFTER gallery_images;
+ALTER TABLE products ADD COLUMN category_name VARCHAR(150) NULL AFTER video_url;
+ALTER TABLE products ADD COLUMN reference_code VARCHAR(120) NULL AFTER category_name;
+ALTER TABLE products ADD COLUMN brand VARCHAR(150) NULL AFTER reference_code;
+ALTER TABLE products ADD COLUMN model VARCHAR(150) NULL AFTER brand;
+ALTER TABLE products ADD COLUMN price_cents INT UNSIGNED NULL AFTER model;
+ALTER TABLE products ADD COLUMN installments SMALLINT UNSIGNED NOT NULL DEFAULT 1 AFTER price_cents;
+ALTER TABLE products ADD COLUMN stock_status ENUM('in_stock','out_of_stock','on_demand') NOT NULL DEFAULT 'on_demand' AFTER installments;
+ALTER TABLE products ADD COLUMN stock_quantity INT UNSIGNED NOT NULL DEFAULT 0 AFTER stock_status;
+ALTER TABLE products ADD COLUMN lead_time VARCHAR(120) NULL AFTER stock_quantity;
+ALTER TABLE products ADD COLUMN sales_channel ENUM('site','whatsapp','both') NOT NULL DEFAULT 'both' AFTER lead_time;
+ALTER TABLE products ADD COLUMN warranty_days SMALLINT UNSIGNED NOT NULL DEFAULT 365 AFTER sales_channel;

@@ -9,6 +9,7 @@ spl_autoload_register(static function (string $class): void {
 });
 
 use App\Core\Logger;
+use App\Middleware\RateLimiter;
 use App\Services\CepService;
 use App\Services\CorreiosService;
 use App\Repositories\AuthRepository;
@@ -83,12 +84,30 @@ $test('AuthService cadastra cliente com senha e sessao protegidas', static funct
 });
 
 $test('Logger grava JSON e remove segredos', static function () use ($assert): void {
-    Logger::info('backend-test', ['token'=>'segredo','safe'=>'ok']);
+    Logger::info('backend-test', ['token'=>'segredo','password'=>'Senha123','authorization'=>'Bearer segredo','email'=>'maria@example.com','safe'=>'ok']);
     $path = dirname(__DIR__) . '/storage/logs/app-' . date('Y-m-d') . '.jsonl';
     $line = trim((string)array_slice(file($path, FILE_IGNORE_NEW_LINES) ?: [], -1)[0]);
     $record = json_decode($line, true, flags: JSON_THROW_ON_ERROR);
     $assert(($record['context']['token'] ?? null) === '[REDACTED]');
+    $assert(($record['context']['password'] ?? null) === '[REDACTED]');
+    $assert(($record['context']['authorization'] ?? null) === '[REDACTED]');
+    $assert(($record['context']['email'] ?? null) === '[REDACTED]');
     $assert(($record['context']['safe'] ?? null) === 'ok');
+});
+
+$test('RateLimiter bloqueia excesso sem armazenar IP em claro', static function () use ($assert): void {
+    $directory = sys_get_temp_dir() . '/painel-rate-limit-' . bin2hex(random_bytes(6));
+    $_ENV['RATE_LIMIT_PATH'] = $directory;
+    try {
+        $first = RateLimiter::attempt('login-test', 1, 60, '203.0.113.42');
+        $second = RateLimiter::attempt('login-test', 1, 60, '203.0.113.42');
+        $assert($first['allowed'] && !$second['allowed'], 'O excesso de tentativas não foi bloqueado.');
+        $assert($second['client_id'] !== '203.0.113.42' && strlen($second['client_id']) === 12, 'O IP não foi anonimizado.');
+    } finally {
+        foreach (glob($directory . '/*.json') ?: [] as $file) unlink($file);
+        if (is_dir($directory)) rmdir($directory);
+        unset($_ENV['RATE_LIMIT_PATH']);
+    }
 });
 
 exit($failures === [] ? 0 : 1);

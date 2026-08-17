@@ -40,6 +40,25 @@ final class AuthRepository
         return (bool)$statement->fetchColumn();
     }
 
+    public function isAdmin(int $userId): bool
+    {
+        $statement = $this->pdo->prepare("SELECT 1 FROM user_roles ur INNER JOIN roles r ON r.id=ur.role_id WHERE ur.user_id=:user_id AND r.slug IN ('superadmin','admin') AND r.status='active' LIMIT 1");
+        $statement->execute(['user_id'=>$userId]);
+        return (bool)$statement->fetchColumn();
+    }
+
+    /** @return array{id:int,name:string,email:string,role:string}|null */
+    public function findAdminBySession(string $tokenHash, string $now): ?array
+    {
+        $statement = $this->pdo->prepare("SELECT u.id,u.name,u.email,r.slug AS role FROM user_sessions s INNER JOIN users u ON u.id=s.user_id INNER JOIN user_roles ur ON ur.user_id=u.id INNER JOIN roles r ON r.id=ur.role_id AND r.slug IN ('superadmin','admin') WHERE s.token_hash=:token_hash AND s.revoked_at IS NULL AND s.expires_at>:now AND u.status='active' AND u.deleted_at IS NULL ORDER BY CASE r.slug WHEN 'superadmin' THEN 0 ELSE 1 END LIMIT 1");
+        $statement->execute(['token_hash'=>$tokenHash,'now'=>$now]);
+        $user = $statement->fetch();
+        if (!is_array($user)) return null;
+        $touch = $this->pdo->prepare('UPDATE user_sessions SET last_used_at=:now WHERE token_hash=:token_hash');
+        $touch->execute(['now'=>$now,'token_hash'=>$tokenHash]);
+        return ['id'=>(int)$user['id'],'name'=>(string)$user['name'],'email'=>(string)$user['email'],'role'=>(string)$user['role']];
+    }
+
     public function updateFailedLogin(int $userId, int $attempts, ?string $lockedUntil, string $now): void
     {
         $statement = $this->pdo->prepare('UPDATE users SET failed_login_attempts=:attempts,locked_until=:locked_until,updated_at=:updated_at WHERE id=:id');
@@ -96,6 +115,29 @@ final class AuthRepository
     {
         $statement = $this->pdo->prepare('UPDATE user_sessions SET revoked_at=:now WHERE token_hash=:token_hash AND revoked_at IS NULL');
         $statement->execute(['now'=>$now,'token_hash'=>$tokenHash]);
+    }
+
+    public function createPasswordReset(int $userId, string $tokenHash, string $expiresAt, string $now): void
+    {
+        $this->pdo->prepare("UPDATE password_resets SET status='revoked',updated_at=:now WHERE user_id=:user_id AND status='pending'")->execute(['now'=>$now,'user_id'=>$userId]);
+        $statement = $this->pdo->prepare('INSERT INTO password_resets (user_id,token_hash,expires_at,status,created_at,updated_at) VALUES (:user_id,:token_hash,:expires_at,\'pending\',:created_at,:updated_at)');
+        $statement->execute(['user_id'=>$userId,'token_hash'=>$tokenHash,'expires_at'=>$expiresAt,'created_at'=>$now,'updated_at'=>$now]);
+    }
+
+    /** @return array{id:int,user_id:int}|null */
+    public function findPasswordReset(string $tokenHash, string $now): ?array
+    {
+        $statement = $this->pdo->prepare("SELECT pr.id,pr.user_id FROM password_resets pr INNER JOIN users u ON u.id=pr.user_id WHERE pr.token_hash=:token_hash AND pr.status='pending' AND pr.expires_at>:now AND u.status='active' AND u.deleted_at IS NULL LIMIT 1");
+        $statement->execute(['token_hash'=>$tokenHash,'now'=>$now]);
+        $row = $statement->fetch();
+        return is_array($row) ? ['id'=>(int)$row['id'],'user_id'=>(int)$row['user_id']] : null;
+    }
+
+    public function completePasswordReset(int $resetId, int $userId, string $passwordHash, string $now): void
+    {
+        $this->pdo->prepare('UPDATE users SET password_hash=:password_hash,failed_login_attempts=0,locked_until=NULL,updated_at=:now WHERE id=:id')->execute(['password_hash'=>$passwordHash,'now'=>$now,'id'=>$userId]);
+        $this->pdo->prepare("UPDATE password_resets SET status='used',used_at=:now,updated_at=:now WHERE id=:id")->execute(['now'=>$now,'id'=>$resetId]);
+        $this->pdo->prepare('UPDATE user_sessions SET revoked_at=:now WHERE user_id=:user_id AND revoked_at IS NULL')->execute(['now'=>$now,'user_id'=>$userId]);
     }
 
     public function begin(): void { $this->pdo->beginTransaction(); }

@@ -12,6 +12,7 @@ final class Response
         header('Content-Type: application/json; charset=utf-8');
         header('X-Request-ID: ' . RequestContext::id());
         $payload['request_id'] ??= RequestContext::id();
+        Logger::request($status);
         if ($status === 204) exit;
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         exit;

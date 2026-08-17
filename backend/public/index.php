@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 use App\Config\Env;
 use App\Core\ErrorHandler;
+use App\Core\RequestContext;
 use App\Core\Router;
 use App\Middleware\Cors;
+use App\Middleware\SecurityHeaders;
 
 define('BASE_PATH', dirname(__DIR__));
 
@@ -20,11 +22,9 @@ Env::load(BASE_PATH . '/.env');
 date_default_timezone_set('America/Sao_Paulo');
 
 ErrorHandler::register();
+RequestContext::begin();
 
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: SAMEORIGIN');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-header("Permissions-Policy: camera=(), microphone=(), geolocation=()");
+SecurityHeaders::apply();
 Cors::handle();
 
 $router = new Router();
