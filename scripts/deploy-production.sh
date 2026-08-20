@@ -33,9 +33,9 @@ docker build \
   --build-arg VITE_COMPANY_SHORT_NAME=PDC \
   --build-arg "VITE_COMPANY_LEGAL_NAME=SMARTFLOW TECNOLOGIA EIRELI" \
   --build-arg VITE_COMPANY_CNPJ=19.252.656/0001-20 \
-  --build-arg "VITE_COMPANY_PHONE=+55 11 92104-7460" \
-  --build-arg VITE_COMPANY_WHATSAPP=5511921047460 \
-  --build-arg "VITE_COMPANY_WHATSAPP_LABEL=+55 11 92104-7460" \
+  --build-arg "VITE_COMPANY_PHONE=+55 11 96919-5102" \
+  --build-arg VITE_COMPANY_WHATSAPP=5511969195102 \
+  --build-arg "VITE_COMPANY_WHATSAPP_LABEL=+55 11 96919-5102" \
   --build-arg VITE_COMPANY_EMAIL=contato@paineldecomando.com.br \
   --build-arg "VITE_COMPANY_ADDRESS=Rua Cabreúva, Sorocaba - SP, CEP 18085-340" \
   --build-arg "VITE_COMPANY_HOURS=Atendimento em horário comercial" \

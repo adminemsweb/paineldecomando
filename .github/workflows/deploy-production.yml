@@ -22,9 +22,9 @@ env:
   VITE_COMPANY_SHORT_NAME: PDC
   VITE_COMPANY_LEGAL_NAME: SMARTFLOW TECNOLOGIA EIRELI
   VITE_COMPANY_CNPJ: 19.252.656/0001-20
-  VITE_COMPANY_PHONE: +55 11 92104-7460
-  VITE_COMPANY_WHATSAPP: "5511921047460"
-  VITE_COMPANY_WHATSAPP_LABEL: +55 11 92104-7460
+  VITE_COMPANY_PHONE: +55 11 96919-5102
+  VITE_COMPANY_WHATSAPP: "5511969195102"
+  VITE_COMPANY_WHATSAPP_LABEL: +55 11 96919-5102
   VITE_COMPANY_EMAIL: contato@paineldecomando.com.br
   VITE_COMPANY_ADDRESS: Rua Cabreúva, Sorocaba - SP, CEP 18085-340
   VITE_COMPANY_HOURS: Atendimento em horário comercial
@@ -113,7 +113,20 @@ jobs:
           PRODUCTION_PATH: ${{ vars.PRODUCTION_PATH }}
         run: |
           release_dir="${PRODUCTION_PATH}/releases/${GITHUB_SHA}"
-          ssh "${PRODUCTION_USER}@${PRODUCTION_HOST}" "mkdir -p '${release_dir}'"
-          scp /tmp/paineldecomando-source.tar.gz "${PRODUCTION_USER}@${PRODUCTION_HOST}:${release_dir}/source.tar.gz"
-          ssh "${PRODUCTION_USER}@${PRODUCTION_HOST}" \
+          remote="${PRODUCTION_USER}@${PRODUCTION_HOST}"
+          ssh_options=(-o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=3)
+
+          connected=false
+          for attempt in 1 2 3 4; do
+            if ssh "${ssh_options[@]}" "$remote" "mkdir -p '${release_dir}'"; then
+              connected=true
+              break
+            fi
+            echo "SSH indisponível (tentativa ${attempt}/4); aguardando para tentar novamente."
+            sleep $((attempt * 10))
+          done
+          "$connected" || exit 1
+
+          scp "${ssh_options[@]}" /tmp/paineldecomando-source.tar.gz "$remote:${release_dir}/source.tar.gz"
+          ssh "${ssh_options[@]}" "$remote" \
             "cd '${release_dir}' && tar -xzf source.tar.gz && rm source.tar.gz && chmod 755 scripts/deploy-production.sh && scripts/deploy-production.sh '${GITHUB_SHA}'"
