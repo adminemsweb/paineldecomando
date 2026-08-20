@@ -25,8 +25,15 @@ export function AppRoutes() {
       <Route path="trocas-e-devolucoes" element={<BuyerPolicyPage kind="returns"/>}/><Route path="garantia" element={<BuyerPolicyPage kind="warranty"/>}/>
       <Route path="politica-de-privacidade" element={<LegalPage/>}/><Route path="termos-de-uso" element={<LegalPage terms/>}/><Route path="*" element={<NotFoundPage/>}/>
     </Route>
-    <Route path="admin/login" element={<AdminLoginPage/>}/>
-    <Route path="admin" element={<AdminLayout/>}><Route index element={<AdminDashboardPage/>}/><Route path="produtos" element={<AdminProductsPage/>}/>{sections.filter(section => section !== 'Produtos').map(section => <Route key={section} path={section.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '')} element={<AdminPlaceholderPage section={section}/>}/>)}</Route>
+    <Route path="admin">
+      <Route index element={<Navigate to="/admin/login" replace/>}/>
+      <Route path="login" element={<AdminLoginPage/>}/>
+      <Route element={<AdminLayout/>}>
+        <Route path="dashboard" element={<AdminDashboardPage/>}/>
+        <Route path="produtos" element={<AdminProductsPage/>}/>
+        {sections.filter(section => section !== 'Produtos').map(section => <Route key={section} path={section.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '')} element={<AdminPlaceholderPage section={section}/>}/>)}
+      </Route>
+    </Route>
     <Route path="/solucoes" element={<Navigate to="/produtos" replace/>}/>
   </Routes></Suspense>;
 }
