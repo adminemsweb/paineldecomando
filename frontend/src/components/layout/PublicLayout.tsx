@@ -10,22 +10,19 @@ const productNavigation = [
   {
     label: "Painel Estrela-Triângulo",
     sections: [
-      {
-        title: "Painel Estrela-Triângulo Econômico",
-        options: ["15CV · 220V · Man/Aut.", "380V"],
-      },
-      { title: "Painel Estrela-Triângulo Padrão", options: ["220V", "380V"] },
-      { title: "Painel com Amperímetro", options: ["220V", "380V"] },
+      { title: "Painel Estrela-Triângulo Econômico", to: "/produtos/painel-estrela-triangulo" },
+      { title: "Painel Estrela-Triângulo Padrão", to: "/produtos/painel-estrela-triangulo" },
+      { title: "Painel com Amperímetro", to: "/produtos/painel-estrela-triangulo" },
     ],
     featured: {
-      name: "Painel Estrela-Triângulo 15CV 220V",
+      name: "Painel Estrela-Triângulo Econômico",
       image: "/images/painel-estrela-triangulo-15cv-principal.png",
       to: "/produtos/painel-estrela-triangulo",
     },
   },
   {
     label: "Painel com Soft Starter WEG",
-    sections: [{ title: "Tensão de alimentação", options: ["220V", "380V"] }],
+    sections: [{ title: "Painel com Soft Starter WEG", to: "/produtos?categoria=soft-starter" }],
     featured: {
       name: "Painel com Soft Starter WEG",
       image: "/images/montagem-painel-industrial-v2.jpg",
@@ -34,7 +31,7 @@ const productNavigation = [
   },
   {
     label: "Painel com Inversor de Frequência",
-    sections: [{ title: "Tensão de alimentação", options: ["220V", "380V"] }],
+    sections: [{ title: "Painel com Inversor de Frequência", to: "/produtos?categoria=inversor-de-frequencia" }],
     featured: {
       name: "Painel com Inversor de Frequência",
       image: "/images/hero-painel-industrial-v2.jpg",
@@ -44,13 +41,10 @@ const productNavigation = [
   {
     label: "Painel Bomba de Incêndio",
     sections: [
-      {
-        title: "Painel Bomba de Incêndio Econômico",
-        options: ["220V", "380V"],
-      },
-      { title: "Painel Bomba de Incêndio Padrão", options: ["220V", "380V"] },
-      { title: "Painel Bomba de Incêndio Vermelho", options: ["220V", "380V"] },
-      { title: "Bomba Principal e Jockey", options: ["220V", "380V"] },
+      { title: "Painel Bomba de Incêndio Econômico", to: "/produtos?categoria=incendio" },
+      { title: "Painel Bomba de Incêndio Padrão", to: "/produtos?categoria=incendio" },
+      { title: "Painel Bomba de Incêndio Vermelho", to: "/produtos?categoria=incendio" },
+      { title: "Bomba Principal e Jockey", to: "/produtos?categoria=incendio" },
     ],
     featured: {
       name: "Painel para Bomba de Incêndio",
@@ -60,7 +54,7 @@ const productNavigation = [
   },
   {
     label: "Painel para Irrigação",
-    sections: [{ title: "Tensão de alimentação", options: ["220V", "380V"] }],
+    sections: [{ title: "Painel para Irrigação", to: "/produtos?aplicacao=irrigacao" }],
     featured: {
       name: "Painel para Irrigação",
       image: "/images/montagem-painel-industrial-v2.jpg",
@@ -69,7 +63,7 @@ const productNavigation = [
   },
   {
     label: "Painel Revezamento de Bombas",
-    sections: [{ title: "Tensão de alimentação", options: ["220V", "380V"] }],
+    sections: [{ title: "Painel para Revezamento de Bombas", to: "/produtos?categoria=revezamento" }],
     featured: {
       name: "Painel para Revezamento de Bombas",
       image: "/images/montagem-painel-industrial-v2.jpg",
@@ -79,17 +73,12 @@ const productNavigation = [
   {
     label: "Mais Categorias",
     sections: [
-      {
-        title: "Outras soluções",
-        options: [
-          "Painel para Estação Elevatória",
-          "Painel de Partida Direta",
-          "Painel com Tomadas Industriais",
-          "Painel para Canteiro de Obras",
-          "Acessórios para Painéis Elétricos",
-          "Quadro de Comando para Bomba de Poço",
-        ],
-      },
+      { title: "Painel para Estação Elevatória", to: "/produtos?busca=Painel%20para%20Esta%C3%A7%C3%A3o%20Elevat%C3%B3ria" },
+      { title: "Painel de Partida Direta", to: "/produtos?busca=Painel%20de%20Partida%20Direta" },
+      { title: "Painel com Tomadas Industriais", to: "/produtos?busca=Painel%20com%20Tomadas%20Industriais" },
+      { title: "Painel para Canteiro de Obras", to: "/produtos?busca=Painel%20para%20Canteiro%20de%20Obras" },
+      { title: "Acessórios para Painéis Elétricos", to: "/produtos?busca=Acess%C3%B3rios%20para%20Pain%C3%A9is%20El%C3%A9tricos" },
+      { title: "Quadro de Comando para Bomba de Poço", to: "/produtos?busca=Quadro%20de%20Comando%20para%20Bomba%20de%20Po%C3%A7o" },
     ],
     featured: undefined,
   },
@@ -284,26 +273,17 @@ export function PublicLayout() {
                     >
                       <div className="product-nav__options">
                         {group.sections.map((section) => (
-                          <section key={section.title}>
-                            <strong>{section.title}</strong>
-                            {section.options.map((option) => (
-                              <NavLink
-                                key={`${section.title}-${option}`}
-                                to={
-                                  hasPublishedProduct
-                                    ? "/produtos/painel-estrela-triangulo"
-                                    : `/produtos?busca=${encodeURIComponent(`${group.label} ${option}`)}`
-                                }
-                                onClick={() => {
-                                  setOpen(false);
-                                  setOpenProductMenu(null);
-                                }}
-                              >
-                                {option}
-                                <span aria-hidden="true">→</span>
-                              </NavLink>
-                            ))}
-                          </section>
+                          <NavLink
+                            key={section.title}
+                            to={section.to}
+                            onClick={() => {
+                              setOpen(false);
+                              setOpenProductMenu(null);
+                            }}
+                          >
+                            {section.title}
+                            <span aria-hidden="true">→</span>
+                          </NavLink>
                         ))}
                       </div>
                       {group.featured && (
