@@ -17,13 +17,14 @@ final class ProductRepository
         if ($search !== '') { $where .= ' AND (name LIKE :search OR summary LIKE :search)'; $params['search'] = '%' . $search . '%'; }
         $count = $this->pdo->prepare("SELECT COUNT(*) FROM products WHERE {$where}");
         $count->execute($params);
-        $sql = "SELECT id,name,slug,summary,featured_image AS image_url FROM products WHERE {$where} ORDER BY sort_order,name LIMIT :limit OFFSET :offset";
+        $sql = "SELECT id,name,slug,summary,featured_image AS image_url,category_name,reference_code,brand,price_cents,installments,stock_status,stock_quantity,lead_time,sales_channel,warranty_days,voltages,power_range,featured FROM products WHERE {$where} ORDER BY featured DESC,sort_order,name LIMIT :limit OFFSET :offset";
         $stmt = $this->pdo->prepare($sql);
         foreach ($params as $key => $value) $stmt->bindValue(':' . $key, $value);
         $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
         $stmt->bindValue(':offset', ($page - 1) * $perPage, PDO::PARAM_INT);
         $stmt->execute();
-        return ['items' => $stmt->fetchAll(), 'total' => (int)$count->fetchColumn()];
+        $items = array_map(fn (array $product): array => $this->decodeProduct($product), $stmt->fetchAll());
+        return ['items' => $items, 'total' => (int)$count->fetchColumn()];
     }
 
     public function bySlug(string $slug): array|false

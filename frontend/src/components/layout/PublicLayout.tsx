@@ -9,6 +9,7 @@ import { useAuth } from "../../auth/AuthContext";
 const productNavigation = [
   {
     label: "Painel Estrela-Triângulo",
+    to: "/produtos?linha=estrela-triangulo",
     sections: [
       { title: "Painel Estrela-Triângulo Econômico", to: "/produtos/painel-estrela-triangulo" },
       { title: "Painel Estrela-Triângulo Padrão", to: "/produtos/painel-estrela-triangulo" },
@@ -22,6 +23,7 @@ const productNavigation = [
   },
   {
     label: "Painel com Soft Starter WEG",
+    to: "/produtos?linha=soft-starter",
     sections: [{ title: "Painel com Soft Starter WEG", to: "/produtos?categoria=soft-starter" }],
     featured: {
       name: "Painel com Soft Starter WEG",
@@ -31,6 +33,7 @@ const productNavigation = [
   },
   {
     label: "Painel com Inversor de Frequência",
+    to: "/produtos?linha=inversor-de-frequencia",
     sections: [{ title: "Painel com Inversor de Frequência", to: "/produtos?categoria=inversor-de-frequencia" }],
     featured: {
       name: "Painel com Inversor de Frequência",
@@ -40,6 +43,7 @@ const productNavigation = [
   },
   {
     label: "Painel Bomba de Incêndio",
+    to: "/produtos?linha=bomba-de-incendio",
     sections: [
       { title: "Painel Bomba de Incêndio Econômico", to: "/produtos?categoria=incendio" },
       { title: "Painel Bomba de Incêndio Padrão", to: "/produtos?categoria=incendio" },
@@ -54,6 +58,7 @@ const productNavigation = [
   },
   {
     label: "Painel para Irrigação",
+    to: "/produtos?linha=irrigacao",
     sections: [{ title: "Painel para Irrigação", to: "/produtos?aplicacao=irrigacao" }],
     featured: {
       name: "Painel para Irrigação",
@@ -63,6 +68,7 @@ const productNavigation = [
   },
   {
     label: "Painel Revezamento de Bombas",
+    to: "/produtos?linha=revezamento",
     sections: [{ title: "Painel para Revezamento de Bombas", to: "/produtos?categoria=revezamento" }],
     featured: {
       name: "Painel para Revezamento de Bombas",
@@ -72,6 +78,7 @@ const productNavigation = [
   },
   {
     label: "Mais Categorias",
+    to: "/produtos",
     sections: [
       { title: "Painel para Estação Elevatória", to: "/produtos?busca=Painel%20para%20Esta%C3%A7%C3%A3o%20Elevat%C3%B3ria" },
       { title: "Painel de Partida Direta", to: "/produtos?busca=Painel%20de%20Partida%20Direta" },
@@ -258,16 +265,17 @@ export function PublicLayout() {
                     onMouseEnter={() => setOpenProductMenu(group.label)}
                     onMouseLeave={() => setOpenProductMenu(null)}
                   >
-                    <button
-                      type="button"
-                      aria-expanded={isMenuOpen}
-                      onClick={() =>
-                        setOpenProductMenu(isMenuOpen ? null : group.label)
-                      }
+                    <NavLink
+                      className="product-nav__trigger"
+                      to={group.to}
+                      onClick={() => {
+                        setOpen(false);
+                        setOpenProductMenu(null);
+                      }}
                     >
                       {group.label}
                       <span aria-hidden="true" />
-                    </button>
+                    </NavLink>
                     <div
                       className={`product-nav__menu${group.featured ? "" : " product-nav__menu--compact"}`}
                     >

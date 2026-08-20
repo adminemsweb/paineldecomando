@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ButtonLink } from '../components/common/ButtonLink';
 import { Icon } from '../components/common/Icon';
@@ -32,20 +32,87 @@ export function DetailPage({ kind }: { kind: string }) {
   return <><PageHero eyebrow="Detalhe técnico" title={slug?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') ?? kind} body={`Página individual de ${kind}, preparada para receber conteúdo da API.`}/><section className="section"><div className="container split"><div><h2>Informações da solução</h2><p>Características, aplicações, benefícios, especificações, mídia e relações serão exibidos aqui após o cadastro administrativo.</p></div><div><ButtonLink to={`/orcamento?interesse=${encodeURIComponent(slug ?? kind)}`}>Pedir orçamento</ButtonLink></div></div></section></>;
 }
 
-type ManagedProduct = { id:number; name:string; slug:string; summary?:string; description?:string; features?:string[]; benefits?:string[]; components?:string[]; voltages?:string; power_range?:string; protection_rating?:string; image_url?:string; gallery_images?:string[]; video_url?:string; video_urls?:string[]; category_name?:string; reference_code?:string; brand?:string; model?:string; price_cents?:number|null; installments?:number; stock_status?:'in_stock'|'out_of_stock'|'on_demand'; stock_quantity?:number; lead_time?:string; sales_channel?:'site'|'whatsapp'|'both'; warranty_days?:number };
+type ManagedProduct = { id:number; name:string; slug:string; summary?:string; description?:string; features?:string[]; benefits?:string[]; components?:string[]; voltages?:string; power_range?:string; protection_rating?:string; image_url?:string; gallery_images?:string[]; video_url?:string; video_urls?:string[]; category_name?:string; reference_code?:string; brand?:string; model?:string; price_cents?:number|null; installments?:number; stock_status?:'in_stock'|'out_of_stock'|'on_demand'; stock_quantity?:number; lead_time?:string; sales_channel?:'site'|'whatsapp'|'both'; warranty_days?:number; featured?:boolean };
+
+const catalogLines = [
+  { slug: 'todos', label: 'Todos os produtos', title: 'Painéis e soluções industriais', description: 'Encontre painéis elétricos, sistemas de partida e soluções de automação para sua aplicação.', terms: [] },
+  { slug: 'estrela-triangulo', label: 'Painel Estrela-Triângulo', title: 'Painéis Estrela-Triângulo', description: 'Compare todos os modelos Estrela-Triângulo publicados, suas potências, tensões e configurações.', terms: ['estrela triangulo', 'estrela-triangulo'] },
+  { slug: 'soft-starter', label: 'Painel com Soft Starter', title: 'Painéis com Soft Starter', description: 'Soluções para partidas e paradas suaves, com proteção e dimensionamento para cada motor.', terms: ['soft starter', 'soft-starter'] },
+  { slug: 'inversor-de-frequencia', label: 'Painel com Inversor', title: 'Painéis com Inversor de Frequência', description: 'Controle de velocidade e processo com inversores dimensionados para aplicações industriais.', terms: ['inversor'] },
+  { slug: 'bomba-de-incendio', label: 'Bomba de Incêndio', title: 'Painéis para Bombas de Incêndio', description: 'Comando, supervisão e proteção para sistemas de combate a incêndio.', terms: ['incendio'] },
+  { slug: 'irrigacao', label: 'Painel para Irrigação', title: 'Painéis para Irrigação', description: 'Controle confiável de bombas e sistemas de irrigação.', terms: ['irrigacao'] },
+  { slug: 'revezamento', label: 'Revezamento de Bombas', title: 'Painéis para Revezamento de Bombas', description: 'Alternância automática para equilibrar o funcionamento e aumentar a vida útil das bombas.', terms: ['revezamento'] },
+] as const;
+
+function normalizeCatalogText(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function productMatchesLine(product: ManagedProduct, terms: readonly string[]) {
+  if (terms.length === 0) return true;
+  const haystack = normalizeCatalogText(`${product.name} ${product.slug} ${product.category_name ?? ''}`);
+  return terms.some(term => haystack.includes(normalizeCatalogText(term)));
+}
+
+function productPrice(product: ManagedProduct) {
+  return product.price_cents == null
+    ? 'Preço sob consulta'
+    : (product.price_cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: string; body: string } }) {
   const [products, setProducts] = useState<ManagedProduct[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('busca') ?? '');
+  const [availability, setAvailability] = useState<'all' | 'available' | 'on_demand'>('all');
+  const [sort, setSort] = useState<'featured' | 'name' | 'price_asc' | 'price_desc'>('featured');
+  const legacyLine = searchParams.get('categoria') ?? searchParams.get('aplicacao');
+  const requestedLine = searchParams.get('linha') ?? ({ incendio: 'bomba-de-incendio', irrigacao: 'irrigacao', revezamento: 'revezamento', 'soft-starter': 'soft-starter', 'inversor-de-frequencia': 'inversor-de-frequencia' }[legacyLine ?? ''] ?? 'todos');
+  const activeLine = catalogLines.find(line => line.slug === requestedLine) ?? catalogLines[0];
   useEffect(() => { apiRequest<ManagedProduct[]>('/products?per_page=50').then(response => setProducts(response.data)).catch(() => setFailed(true)); }, []);
+  const lineCounts = useMemo(() => Object.fromEntries(catalogLines.map(line => [line.slug, (products ?? []).filter(product => productMatchesLine(product, line.terms)).length])), [products]);
+  const visibleProducts = useMemo(() => {
+    const normalizedSearch = normalizeCatalogText(search.trim());
+    const filtered = (products ?? []).filter(product => {
+      if (!productMatchesLine(product, activeLine.terms)) return false;
+      const searchable = normalizeCatalogText(`${product.name} ${product.slug} ${product.summary ?? ''} ${product.category_name ?? ''} ${product.reference_code ?? ''}`);
+      if (normalizedSearch && !searchable.includes(normalizedSearch)) return false;
+      if (availability === 'available' && product.stock_status !== 'in_stock') return false;
+      if (availability === 'on_demand' && product.stock_status !== 'on_demand') return false;
+      return true;
+    });
+    return filtered.sort((a, b) => {
+      if (sort === 'name') return a.name.localeCompare(b.name, 'pt-BR');
+      if (sort === 'price_asc') return (a.price_cents ?? Number.MAX_SAFE_INTEGER) - (b.price_cents ?? Number.MAX_SAFE_INTEGER);
+      if (sort === 'price_desc') return (b.price_cents ?? -1) - (a.price_cents ?? -1);
+      return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
+    });
+  }, [activeLine, availability, products, search, sort]);
   if (failed) return <StorefrontListing copy={copy}/>;
-  return <><PageHero {...copy}/><section className="store-catalog"><div className="container store-catalog__layout">
-    <aside className="store-filters"><span>Catálogo atualizado</span><h2>Encontre a configuração certa</h2><p>Os produtos publicados no painel administrativo aparecem automaticamente nesta página.</p><ButtonLink to="/orcamento" variant="secondary">Falar com a engenharia</ButtonLink></aside>
-    <div className="store-results"><div className="store-results__heading"><div><span>Soluções industriais</span><strong>{products === null ? 'Carregando…' : `${products.length} ${products.length === 1 ? 'produto publicado' : 'produtos publicados'}`}</strong></div></div>
-      {products?.length === 0 && <div className="empty-state"><h2>Nenhum produto publicado</h2><p>Os novos itens aparecerão aqui depois da publicação.</p></div>}
-      {products?.map(product => <article className="store-product-card" key={product.id}><Link className="store-product-card__image" to={`/produtos/${product.slug}`}><img src={product.image_url || '/images/hero-painel-comando-poster.jpg'} alt={product.name}/><span>Projeto sob consulta</span></Link><div className="store-product-card__body"><small>Marca Painel de Comando · Solução industrial</small><h2><Link to={`/produtos/${product.slug}`}>{product.name}</Link></h2><p>{product.summary || 'Consulte as configurações disponíveis para esta solução.'}</p><div><span><small>Condição</small><strong>Sob consulta</strong></span><ButtonLink to={`/produtos/${product.slug}`}>Ver produto</ButtonLink></div></div></article>)}
-    </div>
-  </div></section></>;
+  return <>
+    <div className="catalog-breadcrumb"><div className="container"><Link to="/">Início</Link><span>/</span><Link to="/produtos">Produtos</Link>{activeLine.slug !== 'todos' && <><span>/</span><strong>{activeLine.label}</strong></>}</div></div>
+    <section className="catalog-hero"><div className="container"><span className="eyebrow">{copy.eyebrow}</span><h1>{activeLine.title}</h1><p>{activeLine.description}</p></div></section>
+    <section className="catalog-page"><div className="container catalog-layout">
+      <aside className="catalog-sidebar">
+        <div><span className="catalog-sidebar__title">Categorias</span><nav aria-label="Categorias de produtos" className="catalog-category-list">{catalogLines.map(line => <Link className={line.slug === activeLine.slug ? 'active' : ''} to={line.slug === 'todos' ? '/produtos' : `/produtos?linha=${line.slug}`} key={line.slug}><span>{line.label}</span><b>{lineCounts[line.slug] ?? 0}</b></Link>)}</nav></div>
+        <div><span className="catalog-sidebar__title">Disponibilidade</span><div className="catalog-filter-options"><button className={availability === 'all' ? 'active' : ''} type="button" onClick={() => setAvailability('all')}><i/> Todas as condições</button><button className={availability === 'available' ? 'active' : ''} type="button" onClick={() => setAvailability('available')}><i/> Disponível</button><button className={availability === 'on_demand' ? 'active' : ''} type="button" onClick={() => setAvailability('on_demand')}><i/> Sob encomenda</button></div></div>
+        <div className="catalog-sidebar__help"><strong>Precisa dimensionar seu painel?</strong><p>Nossa engenharia ajuda a definir potência, tensão e proteção.</p><ButtonLink to="/orcamento" variant="secondary">Solicitar orçamento</ButtonLink></div>
+      </aside>
+      <div className="catalog-results">
+        <div className="catalog-toolbar"><label className="catalog-search"><Icon name="search" size={18}/><span className="sr-only">Buscar produtos</span><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar por produto, modelo ou aplicação"/></label><label className="catalog-sort"><span>Ordenar por</span><select value={sort} onChange={event => setSort(event.target.value as typeof sort)}><option value="featured">Destaques</option><option value="name">Nome</option><option value="price_asc">Menor preço</option><option value="price_desc">Maior preço</option></select></label><span className="catalog-count">{products === null ? 'Carregando…' : `${visibleProducts.length} ${visibleProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}`}</span></div>
+        {products !== null && visibleProducts.length === 0 && <div className="empty-state"><h2>Nenhum produto encontrado</h2><p>Tente outra busca ou consulte todas as categorias.</p><ButtonLink to="/produtos" variant="secondary">Ver todos os produtos</ButtonLink></div>}
+        <div className="catalog-grid">{visibleProducts.map(product => {
+          const isAvailable = product.stock_status === 'in_stock' && (product.stock_quantity ?? 1) > 0;
+          const whatsappMessage = encodeURIComponent(`Olá! Quero saber mais sobre ${product.name}.`);
+          return <article className="catalog-card" key={product.id}>
+            <Link className="catalog-card__image" to={`/produtos/${product.slug}`}><span>{product.featured ? 'Destaque' : isAvailable ? 'Disponível' : 'Sob encomenda'}</span><img src={product.image_url || '/images/hero-painel-comando-poster.jpg'} alt={product.name}/></Link>
+            <div className="catalog-card__body"><div className="catalog-card__meta"><strong>{product.category_name || 'Solução industrial'}</strong>{product.reference_code && <small>Ref. {product.reference_code}</small>}</div><h2><Link to={`/produtos/${product.slug}`}>{product.name}</Link></h2><p>{product.summary || 'Consulte as configurações disponíveis para esta solução.'}</p><dl><div><dt>Potência</dt><dd>{product.power_range || 'Sob dimensionamento'}</dd></div><div><dt>Tensão</dt><dd>{product.voltages || 'Consulte opções'}</dd></div></dl><div className="catalog-card__price"><strong>{productPrice(product)}</strong><small>{isAvailable ? `${product.stock_quantity ?? 0} un. disponíveis` : product.lead_time || 'Produção sob encomenda'}</small></div><a className="catalog-card__whatsapp" href={`https://wa.me/${companyConfig.whatsapp}?text=${whatsappMessage}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={18}/> Comprar via WhatsApp</a><Link className="catalog-card__details" to={`/produtos/${product.slug}`}>Ver detalhes e especificações <span>→</span></Link></div>
+          </article>;
+        })}</div>
+      </div>
+    </div></section>
+  </>;
 }
 
 function ManagedProductDetail({ slug }: { slug: string }) {
