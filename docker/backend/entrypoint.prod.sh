@@ -20,6 +20,4 @@ until php /var/www/html/bin/migrate.php; do
   sleep 2
 done
 
-php /var/www/html/bin/apply-catalog-release-20260821.php
-
 exec apache2-foreground
