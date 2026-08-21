@@ -26,12 +26,14 @@ $order = [
 
 $pdo->beginTransaction();
 try {
+    $exists = $pdo->prepare('SELECT 1 FROM products WHERE slug = :slug AND deleted_at IS NULL LIMIT 1');
     $statement = $pdo->prepare('UPDATE products SET sort_order = :sort_order, updated_at = CURRENT_TIMESTAMP WHERE slug = :slug AND deleted_at IS NULL');
     foreach ($order as $slug => $sortOrder) {
-        $statement->execute(['sort_order' => $sortOrder, 'slug' => $slug]);
-        if ($statement->rowCount() !== 1) {
+        $exists->execute(['slug' => $slug]);
+        if (!$exists->fetchColumn()) {
             throw new RuntimeException("Produto não encontrado para ordenar: {$slug}");
         }
+        $statement->execute(['sort_order' => $sortOrder, 'slug' => $slug]);
     }
     $pdo->commit();
 } catch (Throwable $exception) {
