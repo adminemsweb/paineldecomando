@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { companyConfig } from "../../constants/company";
 import { Icon } from "../common/Icon";
 import { PaymentIcon } from "../common/PaymentIcon";
@@ -8,7 +8,7 @@ import { useAuth } from "../../auth/AuthContext";
 
 const productNavigation = [
   {
-    label: "Painel Estrela-Triângulo",
+    label: "Estrela-Triângulo",
     to: "/produtos?linha=estrela-triangulo",
     sections: [
       { title: "Painel Estrela-Triângulo Econômico", to: "/produtos/painel-estrela-triangulo" },
@@ -22,7 +22,7 @@ const productNavigation = [
     },
   },
   {
-    label: "Painel com Soft Starter WEG",
+    label: "Soft Starter",
     to: "/produtos?linha=soft-starter",
     sections: [{ title: "Painel com Soft Starter WEG", to: "/produtos?categoria=soft-starter" }],
     featured: {
@@ -32,7 +32,7 @@ const productNavigation = [
     },
   },
   {
-    label: "Painel com Inversor de Frequência",
+    label: "Inversor de Frequência",
     to: "/produtos?linha=inversor-de-frequencia",
     sections: [{ title: "Painel com Inversor de Frequência", to: "/produtos?categoria=inversor-de-frequencia" }],
     featured: {
@@ -42,7 +42,7 @@ const productNavigation = [
     },
   },
   {
-    label: "Painel Bomba de Incêndio",
+    label: "Bomba de Incêndio",
     to: "/produtos?linha=bomba-de-incendio",
     sections: [
       { title: "Painel Bomba de Incêndio Econômico", to: "/produtos?categoria=incendio" },
@@ -57,7 +57,7 @@ const productNavigation = [
     },
   },
   {
-    label: "Painel para Irrigação",
+    label: "Irrigação",
     to: "/produtos?linha=irrigacao",
     sections: [{ title: "Painel para Irrigação", to: "/produtos?aplicacao=irrigacao" }],
     featured: {
@@ -67,7 +67,7 @@ const productNavigation = [
     },
   },
   {
-    label: "Painel Revezamento de Bombas",
+    label: "Revezamento de Bombas",
     to: "/produtos?linha=revezamento",
     sections: [{ title: "Painel para Revezamento de Bombas", to: "/produtos?categoria=revezamento" }],
     featured: {
@@ -77,7 +77,7 @@ const productNavigation = [
     },
   },
   {
-    label: "Mais Categorias",
+    label: "Todos os Produtos",
     to: "/produtos",
     sections: [
       { title: "Painel para Estação Elevatória", to: "/produtos?busca=Painel%20para%20Esta%C3%A7%C3%A3o%20Elevat%C3%B3ria" },
@@ -94,7 +94,6 @@ const productNavigation = [
 export function PublicLayout() {
   const { user, loading: authLoading } = useAuth();
   const [open, setOpen] = useState(false);
-  const [openProductMenu, setOpenProductMenu] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [quoteProduct, setQuoteProduct] = useState("Painel Estrela-Triângulo");
   const [quotePhone, setQuotePhone] = useState("");
@@ -219,7 +218,6 @@ export function PublicLayout() {
             aria-controls="store-menu"
             aria-label={open ? "Fechar menu" : "Abrir menu"}
             onClick={() => {
-              setOpenProductMenu(null);
               setOpen(!open);
             }}
           >
@@ -245,94 +243,23 @@ export function PublicLayout() {
                 end
                 onClick={() => {
                   setOpen(false);
-                  setOpenProductMenu(null);
                 }}
               >
                 Início
               </NavLink>
-              {productNavigation.map((group) => {
-                const isMenuOpen = openProductMenu === group.label;
-                const hasPublishedProduct =
-                  group.label === "Painel Estrela-Triângulo";
-                return (
-                  <div
-                    className={
-                      isMenuOpen
-                        ? "product-nav__item product-nav__item--open"
-                        : "product-nav__item"
-                    }
-                    key={group.label}
-                    onMouseEnter={() => setOpenProductMenu(group.label)}
-                    onMouseLeave={() => setOpenProductMenu(null)}
-                  >
-                    <NavLink
-                      className="product-nav__trigger"
+              {productNavigation.map((group) => (
+                  <div className="product-nav__item" key={group.label}>
+                    <Link
+                      className={pathname + locationSearch === group.to ? "product-nav__trigger active" : "product-nav__trigger"}
                       to={group.to}
                       onClick={() => {
                         setOpen(false);
-                        setOpenProductMenu(null);
                       }}
                     >
                       {group.label}
-                      <span aria-hidden="true" />
-                    </NavLink>
-                    <div
-                      className={`product-nav__menu${group.featured ? "" : " product-nav__menu--compact"}`}
-                    >
-                      <div className="product-nav__options">
-                        {group.sections.map((section) => (
-                          <NavLink
-                            key={section.title}
-                            to={section.to}
-                            onClick={() => {
-                              setOpen(false);
-                              setOpenProductMenu(null);
-                            }}
-                          >
-                            {section.title}
-                            <span aria-hidden="true">→</span>
-                          </NavLink>
-                        ))}
-                      </div>
-                      {group.featured && (
-                        <article className="product-nav__featured">
-                          <NavLink
-                            to={group.featured.to}
-                            onClick={() => {
-                              setOpen(false);
-                              setOpenProductMenu(null);
-                            }}
-                          >
-                            <img src={group.featured.image} alt="" />
-                            <strong>{group.featured.name}</strong>
-                          </NavLink>
-                          {hasPublishedProduct ? (
-                            <>
-                              <span>R$ 1.247,00</span>
-                              <small>3x de R$ 415,67 sem juros</small>
-                            </>
-                          ) : (
-                            <>
-                              <span>Sob consulta</span>
-                              <small>Configuração conforme a aplicação</small>
-                            </>
-                          )}
-                          <NavLink
-                            className="product-nav__buy"
-                            to={group.featured.to}
-                            onClick={() => {
-                              setOpen(false);
-                              setOpenProductMenu(null);
-                            }}
-                          >
-                            Ver produto
-                          </NavLink>
-                        </article>
-                      )}
-                    </div>
+                    </Link>
                   </div>
-                );
-              })}
+                ))}
             </div>
           </nav>
         </div>
