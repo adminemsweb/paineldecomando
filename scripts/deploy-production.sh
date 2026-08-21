@@ -76,6 +76,13 @@ wait_for_service frontend "paineldecomando-frontend:${image_tag}"
 wait_for_service api "paineldecomando-api:${image_tag}"
 wait_for_service db "mariadb:11.4"
 
+api_container="$(docker ps \
+  --filter "label=com.docker.swarm.service.name=${stack_name}_api" \
+  --filter status=running \
+  --format '{{.ID}}' | head -n 1)"
+[[ -n "$api_container" ]]
+docker exec "$api_container" php /var/www/html/bin/apply-catalog-release-20260821.php
+
 curl --fail --silent --show-error --retry 12 --retry-delay 5 \
   https://paineldecomando.com.br/api/v1/health >/dev/null
 curl --fail --silent --show-error --retry 6 --retry-delay 3 \
