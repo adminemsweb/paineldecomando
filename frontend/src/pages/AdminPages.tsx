@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Icon } from '../components/common/Icon';
 import { companyConfig } from '../constants/company';
 import { ApiError, apiRequest } from '../services/api';
 
@@ -92,6 +93,16 @@ function slugify(value: string) {
 }
 
 type UploadedMedia = { url: string; kind: 'image' | 'video'; original_name: string; size_bytes: number };
+type AdminCategory = { id: number; parent_id: number | null; name: string; slug: string; description?: string | null; status: 'draft' | 'published' | 'archived'; sort_order: number; seo_title?: string | null; seo_description?: string | null; updated_at?: string };
+
+function categoryMenuLabel(category: AdminCategory) {
+  const labels: Record<string, string> = {
+    'paineis-de-partida': 'Estrela-Triângulo',
+    'painel-com-soft-starter': 'Soft Starter',
+    'painel-com-inversor-de-frequencia': 'Inversor de Frequência',
+  };
+  return labels[category.slug] ?? category.name;
+}
 
 async function uploadMedia(file: File) {
   const form = new FormData();
@@ -110,7 +121,50 @@ function ProductEditor({ product, onSaved, onCancel }: { product: AdminProduct |
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(0);
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(0);
   const update = (field: string, value: string | number | boolean) => setDraft(current => ({ ...current, [field]: value }));
+
+  useEffect(() => {
+    apiRequest<AdminCategory[]>('/admin/categories')
+      .then(response => {
+        const options = response.data;
+        const current = options.find(category => category.name === product?.category_name);
+        setCategories(options);
+        if (current?.parent_id) {
+          setSelectedCategoryId(current.parent_id);
+          setSelectedSubcategoryId(current.id);
+        } else if (current) {
+          setSelectedCategoryId(current.id);
+        } else if (product?.category_name) {
+          setSelectedCategoryId(-1);
+        }
+      })
+      .catch(requestError => setCategoriesError(requestError instanceof ApiError ? requestError.message : 'Não foi possível carregar as categorias.'))
+      .finally(() => setCategoriesLoading(false));
+  }, [product]);
+
+  const rootCategories = categories.filter(category => category.parent_id === null);
+  const subcategories = categories.filter(category => category.parent_id === selectedCategoryId);
+
+  function selectCategory(value: string) {
+    const id = Number(value);
+    const category = categories.find(item => item.id === id);
+    setSelectedCategoryId(category?.parent_id ?? id);
+    setSelectedSubcategoryId(category?.parent_id ? id : 0);
+    update('category_name', category?.name ?? '');
+  }
+
+  function selectSubcategory(value: string) {
+    const id = Number(value);
+    const category = categories.find(item => item.id === selectedCategoryId);
+    const subcategory = categories.find(item => item.id === id && item.parent_id === selectedCategoryId);
+    setSelectedSubcategoryId(id);
+    update('category_name', subcategory?.name ?? category?.name ?? '');
+  }
 
   async function uploadPrincipal(file?: File) {
     if (!file) return;
@@ -164,7 +218,8 @@ function ProductEditor({ product, onSaved, onCancel }: { product: AdminProduct |
         <label>Status<select value={draft.status} onChange={event => update('status', event.target.value)}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="archived">Arquivado</option></select></label>
         <label className="admin-form-wide">Resumo<textarea value={draft.summary ?? ''} onChange={event => update('summary', event.target.value)} rows={3} maxLength={600}/></label>
         <label className="admin-form-wide">Descrição completa<textarea value={draft.description ?? ''} onChange={event => update('description', event.target.value)} rows={6}/></label>
-        <label>Categoria<input value={draft.category_name ?? ''} onChange={event => update('category_name', event.target.value)} placeholder="Painéis de partida"/></label>
+        <label>Categoria<select value={selectedSubcategoryId || selectedCategoryId} onChange={event => selectCategory(event.target.value)} disabled={categoriesLoading || rootCategories.length === 0} required><option value={0}>{categoriesLoading ? 'Carregando categorias…' : rootCategories.length === 0 ? 'Nenhuma categoria cadastrada' : 'Selecione uma categoria'}</option>{selectedCategoryId === -1 && product?.category_name && <option value={-1} disabled>Atual: {product.category_name} (não cadastrada)</option>}{rootCategories.flatMap(category => [<option value={category.id} key={category.id}>{categoryMenuLabel(category)}{category.status !== 'published' ? ' — não publicada' : ''}</option>, ...categories.filter(item => item.parent_id === category.id).map(subcategory => <option value={subcategory.id} key={subcategory.id}>↳ {subcategory.name}{subcategory.status !== 'published' ? ' — não publicada' : ''}</option>)])}</select>{categoriesError && <small className="admin-field-error">{categoriesError}</small>}</label>
+        {subcategories.length > 0 && <label>Subcategoria<select value={selectedSubcategoryId} onChange={event => selectSubcategory(event.target.value)}><option value={0}>Sem subcategoria</option>{subcategories.map(category => <option value={category.id} key={category.id}>{category.name}{category.status !== 'published' ? ' — não publicada' : ''}</option>)}</select></label>}
         <label>Código de referência<input value={draft.reference_code ?? ''} onChange={event => update('reference_code', event.target.value)} placeholder="PAINEL-E.T-15CV"/></label>
         <label>Marca<input value={draft.brand ?? ''} onChange={event => update('brand', event.target.value)}/></label>
         <label>Modelo<input value={draft.model ?? ''} onChange={event => update('model', event.target.value)}/></label>
@@ -244,6 +299,90 @@ export function AdminProductsPage() {
       {loading ? <div className="admin-empty" role="status">Carregando produtos…</div> : visible.length === 0 ? <div className="admin-empty"><strong>Nenhum produto encontrado</strong><p>Altere a busca ou adicione o primeiro produto.</p></div> : <div className="admin-product-table-wrap"><table className="admin-product-table"><thead><tr><th>Produto</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ordem</th><th>Atualização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{visible.map(product => <tr key={product.id}><td><div className="admin-product-cell">{product.image_url ? <img src={product.image_url} alt=""/> : <span aria-hidden="true">PC</span>}<div><strong>{product.name}</strong><small>/{product.slug}</small></div></div></td><td>{product.price_cents == null ? 'Sob consulta' : (product.price_cents / 100).toLocaleString('pt-BR', { style:'currency', currency:'BRL' })}</td><td>{product.stock_status === 'in_stock' ? `${product.stock_quantity} un.` : product.stock_status === 'out_of_stock' ? 'Sem estoque' : 'Sob encomenda'}</td><td><span className={`admin-status admin-status--${product.status}`}>{product.status === 'published' ? 'Publicado' : product.status === 'draft' ? 'Rascunho' : 'Arquivado'}</span></td><td>{product.sort_order}</td><td>{new Date(product.updated_at).toLocaleDateString('pt-BR')}</td><td><div className="admin-row-actions"><button type="button" onClick={() => setEditing(product)}>Editar</button><Link to={`/produtos/${product.slug}`} target="_blank">Ver</Link><button className="danger" type="button" onClick={() => remove(product)}>Remover</button></div></td></tr>)}</tbody></table></div>}
     </section>
     {editing !== undefined && <ProductEditor key={editing?.id ?? 'new'} product={editing} onSaved={saved} onCancel={() => setEditing(undefined)}/>} 
+  </>;
+}
+
+function CategoryEditor({ category, categories, defaultParentId = null, onSaved, onCancel }: { category: AdminCategory | null; categories: AdminCategory[]; defaultParentId?: number | null; onSaved: (category: AdminCategory) => void; onCancel: () => void }) {
+  const [draft, setDraft] = useState(() => category ? { ...category } : { name:'', slug:'', parent_id:defaultParentId, description:'', status:'published' as const, sort_order:0, seo_title:'', seo_description:'' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const roots = categories.filter(item => item.parent_id === null && item.id !== category?.id);
+  const update = (field: string, value: string | number | null) => setDraft(current => ({ ...current, [field]:value }));
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setSaving(true); setError('');
+    try {
+      const response = await apiRequest<AdminCategory>(category ? `/admin/categories/${category.id}` : '/admin/categories', { method:category ? 'PUT' : 'POST', body:JSON.stringify(draft) });
+      onSaved(response.data);
+    } catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível salvar a categoria.'); }
+    finally { setSaving(false); }
+  }
+
+  return <div className="admin-editor-backdrop" role="presentation"><section className="admin-editor admin-editor--category" role="dialog" aria-modal="true" aria-labelledby="category-editor-title"><header><div><span>{category ? 'Editar categoria' : 'Nova categoria'}</span><h2 id="category-editor-title">{category?.name || 'Adicionar categoria'}</h2></div><button type="button" onClick={onCancel} aria-label="Fechar editor">×</button></header><form className="admin-product-form" onSubmit={submit}><div className="admin-form-section"><h3>Organização do catálogo</h3><div className="admin-form-grid">
+    <label className="admin-form-wide">Nome<input value={draft.name} required maxLength={150} onChange={event => { update('name', event.target.value); if (!category) update('slug', slugify(event.target.value)); }}/></label>
+    <label>Endereço (slug)<input value={draft.slug} required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" onChange={event => update('slug', slugify(event.target.value))}/></label>
+    <label>Categoria principal<select value={draft.parent_id ?? 0} onChange={event => update('parent_id', Number(event.target.value) || null)}><option value={0}>Nenhuma — categoria principal</option>{roots.map(root => <option value={root.id} key={root.id}>{root.name}</option>)}</select></label>
+    <label>Status<select value={draft.status} onChange={event => update('status', event.target.value)}><option value="published">Publicada</option><option value="draft">Rascunho</option><option value="archived">Arquivada</option></select></label>
+    <label>Ordem<input type="number" min="0" value={draft.sort_order} onChange={event => update('sort_order', Number(event.target.value))}/></label>
+    <label className="admin-form-wide">Descrição<textarea rows={4} value={draft.description ?? ''} onChange={event => update('description', event.target.value)}/></label>
+    <label className="admin-form-wide">Título para buscadores<input maxLength={190} value={draft.seo_title ?? ''} onChange={event => update('seo_title', event.target.value)}/></label>
+    <label className="admin-form-wide">Descrição para buscadores<textarea rows={2} maxLength={320} value={draft.seo_description ?? ''} onChange={event => update('seo_description', event.target.value)}/></label>
+  </div></div>{error && <div className="admin-alert admin-alert--error" role="alert">{error}</div>}<footer><button className="button button--secondary" type="button" onClick={onCancel}>Cancelar</button><button className="button button--primary" type="submit" disabled={saving}>{saving ? 'Salvando…' : 'Salvar categoria'}</button></footer></form></section></div>;
+}
+
+export function AdminCategoriesPage() {
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [editing, setEditing] = useState<AdminCategory | null | undefined>(undefined);
+  const [newParentId, setNewParentId] = useState<number | null>(null);
+
+  const load = () => {
+    setLoading(true); setError('');
+    apiRequest<AdminCategory[]>('/admin/categories').then(response => setCategories(response.data)).catch(requestError => setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível carregar as categorias.')).finally(() => setLoading(false));
+  };
+  useEffect(() => {
+    apiRequest<AdminCategory[]>('/admin/categories')
+      .then(response => setCategories(response.data))
+      .catch(requestError => setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível carregar as categorias.'))
+      .finally(() => setLoading(false));
+  }, []);
+  const roots = categories.filter(category => category.parent_id === null);
+
+  function saved(category: AdminCategory) {
+    setCategories(current => current.some(item => item.id === category.id) ? current.map(item => item.id === category.id ? category : item) : [...current, category]);
+    setEditing(undefined); setNewParentId(null); setNotice('Categoria salva com sucesso.'); window.setTimeout(() => setNotice(''), 3500);
+  }
+
+  async function remove(category: AdminCategory) {
+    if (!window.confirm(`Remover “${category.name}”?`)) return;
+    try { await apiRequest<null>(`/admin/categories/${category.id}`, { method:'DELETE' }); setCategories(current => current.filter(item => item.id !== category.id)); setNotice('Categoria removida.'); }
+    catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível remover a categoria.'); }
+  }
+
+  const subcategoryCount = categories.length - roots.length;
+  const publishedCount = categories.filter(category => category.status === 'published').length;
+
+  return <>
+    <div className="admin-heading admin-category-page-heading"><div><span className="eyebrow">Catálogo</span><h1>Categorias</h1><p>Organize o catálogo em categorias principais e subcategorias.</p></div><button className="button button--primary" type="button" onClick={() => { setNewParentId(null); setEditing(null); }}><Icon name="plus" size={17}/> Nova categoria</button></div>
+    {notice && <div className="admin-alert admin-alert--success" role="status">{notice}</div>}
+    {error && <div className="admin-alert admin-alert--error" role="alert">{error}<button type="button" onClick={load}>Tentar novamente</button></div>}
+    <section className="admin-category-summary" aria-label="Resumo das categorias"><div><span>Categorias principais</span><strong>{roots.length}</strong></div><div><span>Subcategorias</span><strong>{subcategoryCount}</strong></div><div><span>Publicadas</span><strong>{publishedCount}</strong></div></section>
+    <section className="admin-panel admin-category-panel">
+      <div className="admin-category-heading"><div><strong>Estrutura do catálogo</strong><span>As subcategorias ficam agrupadas abaixo da categoria principal.</span></div><b>{categories.length} {categories.length === 1 ? 'item' : 'itens'}</b></div>
+      {loading ? <div className="admin-empty" role="status">Carregando categorias…</div> : roots.length === 0 ? <div className="admin-empty"><strong>Nenhuma categoria cadastrada</strong><p>Crie a primeira categoria para começar a organizar o catálogo.</p></div> : <div className="admin-category-tree">{roots.map(root => {
+        const children = categories.filter(category => category.parent_id === root.id);
+        const statusText = root.status === 'published' ? 'Publicada' : root.status === 'draft' ? 'Rascunho' : 'Arquivada';
+        return <article key={root.id}>
+          <div className="admin-category-root"><span className="admin-category-icon"><Icon name="folder" size={19}/></span><div className="admin-category-name"><strong>{root.name}</strong><small>/{root.slug}</small></div><span className="admin-category-count">{children.length} {children.length === 1 ? 'subcategoria' : 'subcategorias'}</span><span className={`admin-status admin-status--${root.status}`}>{statusText}</span><div className="admin-row-actions"><button className="admin-row-action--add" type="button" onClick={() => { setNewParentId(root.id); setEditing(null); }}><Icon name="plus" size={14}/><span>Subcategoria</span></button><button type="button" onClick={() => setEditing(root)}><Icon name="edit" size={14}/><span>Editar</span></button><button type="button" className="danger" onClick={() => void remove(root)}><Icon name="trash" size={14}/><span>Remover</span></button></div></div>
+          {children.length > 0 && <div className="admin-category-children">{children.map(child => <div key={child.id}><span className="admin-category-child-icon"><Icon name="tag" size={15}/></span><div className="admin-category-name"><strong>{child.name}</strong><small>/{child.slug}</small></div><span className="admin-category-order">Ordem {child.sort_order}</span><span className={`admin-status admin-status--${child.status}`}>{child.status === 'published' ? 'Publicada' : child.status === 'draft' ? 'Rascunho' : 'Arquivada'}</span><div className="admin-row-actions"><button type="button" onClick={() => setEditing(child)}><Icon name="edit" size={14}/><span>Editar</span></button><button type="button" className="danger" onClick={() => void remove(child)}><Icon name="trash" size={14}/><span>Remover</span></button></div></div>)}</div>}
+        </article>;
+      })}</div>}
+    </section>
+    {editing !== undefined && (
+      <CategoryEditor key={`${editing?.id ?? 'new'}-${newParentId ?? 'root'}`} category={editing} categories={categories} defaultParentId={newParentId} onSaved={saved} onCancel={() => { setEditing(undefined); setNewParentId(null); }}/>
+    )}
   </>;
 }
 

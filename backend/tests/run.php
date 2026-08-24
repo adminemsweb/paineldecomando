@@ -13,6 +13,7 @@ use App\Middleware\RateLimiter;
 use App\Services\CepService;
 use App\Services\CorreiosService;
 use App\Repositories\AuthRepository;
+use App\Repositories\CategoryRepository;
 use App\Services\AuthService;
 use App\Validators\AuthValidator;
 use App\Validators\LeadValidator;
@@ -52,6 +53,16 @@ $test('CepService valida CEP antes de consultar o provedor', static function ():
         throw $exception;
     }
     throw new RuntimeException('CEP invalido foi aceito.');
+});
+
+$test('CategoryRepository mantém categorias e subcategorias em hierarquia', static function () use ($assert): void {
+    $pdo = new PDO('sqlite::memory:', options:[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo->exec("CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT,parent_id INTEGER NULL,name TEXT NOT NULL,slug TEXT NOT NULL,description TEXT NULL,status TEXT NOT NULL,sort_order INTEGER NOT NULL DEFAULT 0,seo_title TEXT NULL,seo_description TEXT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,deleted_at TEXT NULL)");
+    $pdo->exec("INSERT INTO categories (id,parent_id,name,slug,status,sort_order) VALUES (1,NULL,'Painéis de partida','paineis-de-partida','published',1),(2,1,'Estrela-Triângulo Econômico','estrela-triangulo-economico','published',1),(3,NULL,'Automação','automacao','draft',2)");
+    $categories = (new CategoryRepository($pdo))->all();
+    $assert(count($categories) === 3, 'Quantidade de categorias incorreta.');
+    $assert($categories[0]['name'] === 'Painéis de partida' && $categories[1]['parent_id'] === 1, 'A subcategoria não ficou abaixo da categoria pai.');
+    $assert($categories[2]['status'] === 'draft', 'O status administrativo não foi preservado.');
 });
 
 $test('AuthValidator exige senha forte, telefone e consentimento', static function () use ($assert): void {

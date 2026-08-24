@@ -1,0 +1,14 @@
+.git
+.github
+.vscode
+.env
+.env.production
+frontend/node_modules
+frontend/dist
+backend/.env
+backend/storage/*.sqlite
+backend/storage/logs/*
+backend/storage/rate-limits/*
+backend/public/uploads/*
+*.log
+tmp

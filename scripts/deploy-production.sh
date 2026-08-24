@@ -82,7 +82,7 @@ api_container="$(docker ps \
   --format '{{.ID}}' | head -n 1)"
 [[ -n "$api_container" ]]
 docker exec "$api_container" sh -lc \
-  'export DB_PASSWORD="$(cat "$DB_PASSWORD_FILE")"; php /var/www/html/bin/apply-catalog-release-20260821.php'
+  'export DB_PASSWORD="$(cat "$DB_PASSWORD_FILE")"; php /var/www/html/bin/sync-production-catalog.php'
 
 curl --fail --silent --show-error --retry 12 --retry-delay 5 \
   https://paineldecomando.com.br/api/v1/health >/dev/null

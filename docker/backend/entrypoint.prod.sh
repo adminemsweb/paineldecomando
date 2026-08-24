@@ -20,4 +20,6 @@ until php /var/www/html/bin/migrate.php; do
   sleep 2
 done
 
+php /var/www/html/bin/sync-production-catalog.php
+
 exec apache2-foreground

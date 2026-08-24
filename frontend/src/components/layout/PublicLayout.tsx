@@ -24,9 +24,9 @@ const productNavigation = [
   {
     label: "Soft Starter",
     to: "/produtos?linha=soft-starter",
-    sections: [{ title: "Painel com Soft Starter WEG", to: "/produtos?categoria=soft-starter" }],
+    sections: [{ title: "Painel com Soft Starter", to: "/produtos?categoria=soft-starter" }],
     featured: {
-      name: "Painel com Soft Starter WEG",
+      name: "Painel com Soft Starter",
       image: "/images/montagem-painel-industrial-v2.jpg",
       to: "/produtos?categoria=soft-starter",
     },

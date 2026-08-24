@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { PublicLayout } from '../components/layout/PublicLayout';
 import { AccountPage, BuyerPolicyPage, CartPage, CompanyPage, ContactPage, DetailPage, ForgotPasswordPage, LegalPage, ListingPage, NotFoundPage, QuotePage, ResetPasswordPage } from '../pages/PublicPages';
-import { AdminDashboardPage, AdminLoginPage, AdminPlaceholderPage, AdminProductsPage } from '../pages/AdminPages';
+import { AdminCategoriesPage, AdminDashboardPage, AdminLoginPage, AdminPlaceholderPage, AdminProductsPage } from '../pages/AdminPages';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const sections = ['Produtos', 'Categorias', 'Segmentos', 'Serviços', 'Projetos', 'Posts', 'Leads', 'Configurações'];
@@ -31,7 +31,8 @@ export function AppRoutes() {
       <Route element={<AdminLayout/>}>
         <Route path="dashboard" element={<AdminDashboardPage/>}/>
         <Route path="produtos" element={<AdminProductsPage/>}/>
-        {sections.filter(section => section !== 'Produtos').map(section => <Route key={section} path={section.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '')} element={<AdminPlaceholderPage section={section}/>}/>)}
+        <Route path="categorias" element={<AdminCategoriesPage/>}/>
+        {sections.filter(section => !['Produtos','Categorias'].includes(section)).map(section => <Route key={section} path={section.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '')} element={<AdminPlaceholderPage section={section}/>}/>)}
       </Route>
     </Route>
     <Route path="/solucoes" element={<Navigate to="/produtos" replace/>}/>
