@@ -994,4 +994,16 @@ $pdo->exec("UPDATE products SET
     updated_at=CURRENT_TIMESTAMP
 WHERE deleted_at IS NULL");
 
+require __DIR__ . '/upsert-soft-starter-30cv-380v.php';
+require __DIR__ . '/upsert-soft-starter-45a-30cv-380v.php';
+require __DIR__ . '/upsert-soft-starter-61a-40cv-380v.php';
+require __DIR__ . '/upsert-soft-starter-30a-20cv-380v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-125cv-220v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-60cv-220v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-50cv-220v.php';
+require __DIR__ . '/upsert-soft-starter-85a-30cv-220v.php';
+require __DIR__ . '/upsert-soft-starter-61a-20cv-220v.php';
+require __DIR__ . '/upsert-soft-starter-45a-15cv-220v.php';
+require __DIR__ . '/upsert-soft-starter-30a-10cv-220v.php';
+
 echo "Banco local preparado.\nAdmin: {$email}\n";
