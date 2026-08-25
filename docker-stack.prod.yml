@@ -45,9 +45,17 @@ services:
       DB_DATABASE: painel_de_comando
       DB_USERNAME: painel_app
       DB_PASSWORD_FILE: /run/secrets/paineldecomando_db_password
+      MAIL_FROM: sistema@paineldecomando.com.br
+      MAIL_FROM_NAME: Painel de Comando
+      SMTP_HOST: mail.svtech.cloud
+      SMTP_PORT: 465
+      SMTP_ENCRYPTION: ssl
+      SMTP_USERNAME: sistema@paineldecomando.com.br
+      SMTP_PASSWORD_FILE: /run/secrets/paineldecomando_smtp_password
       LOG_PATH: /var/www/html/storage/logs
     secrets:
       - paineldecomando_db_password
+      - paineldecomando_smtp_password
     networks:
       - internal
     volumes:
@@ -102,4 +110,6 @@ secrets:
   paineldecomando_db_password:
     external: true
   paineldecomando_db_root_password:
+    external: true
+  paineldecomando_smtp_password:
     external: true

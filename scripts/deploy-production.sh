@@ -22,6 +22,7 @@ trap rollback ERR
 docker network inspect traefik_public >/dev/null
 docker secret inspect paineldecomando_db_password >/dev/null
 docker secret inspect paineldecomando_db_root_password >/dev/null
+docker secret inspect paineldecomando_smtp_password >/dev/null
 
 cd "$release_dir"
 

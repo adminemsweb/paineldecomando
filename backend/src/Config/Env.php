@@ -22,7 +22,19 @@ final class Env
     public static function get(string $key, ?string $default = null): ?string
     {
         $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
-        return $value !== false && $value !== null ? (string)$value : (self::$values[$key] ?? $default);
+        if ($value !== false && $value !== null) return (string)$value;
+        if (array_key_exists($key, self::$values)) return self::$values[$key];
+
+        $fileKey = $key . '_FILE';
+        $file = $_ENV[$fileKey] ?? $_SERVER[$fileKey] ?? getenv($fileKey);
+        if (($file === false || $file === null) && array_key_exists($fileKey, self::$values)) {
+            $file = self::$values[$fileKey];
+        }
+        if (is_string($file) && $file !== '' && is_readable($file)) {
+            return rtrim((string)file_get_contents($file), "\r\n");
+        }
+
+        return $default;
     }
 
     public static function bool(string $key, bool $default = false): bool
@@ -30,4 +42,3 @@ final class Env
         return filter_var(self::get($key, $default ? 'true' : 'false'), FILTER_VALIDATE_BOOL);
     }
 }
-

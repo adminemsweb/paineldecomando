@@ -9,6 +9,7 @@ spl_autoload_register(static function (string $class): void {
 });
 
 use App\Core\Logger;
+use App\Config\Env;
 use App\Middleware\RateLimiter;
 use App\Services\CepService;
 use App\Services\CorreiosService;
@@ -26,6 +27,19 @@ $test = static function (string $name, callable $callback) use (&$failures): voi
 $assert = static function (bool $condition, string $message = 'Assertion failed'): void {
     if (!$condition) throw new RuntimeException($message);
 };
+
+$test('Env carrega segredos montados em arquivo', static function () use ($assert): void {
+    $path = tempnam(sys_get_temp_dir(), 'painel-secret-');
+    if ($path === false) throw new RuntimeException('Nao foi possivel criar o segredo temporario.');
+    file_put_contents($path, "senha-segura\n");
+    $_ENV['TEST_SECRET_FILE'] = $path;
+    try {
+        $assert(Env::get('TEST_SECRET') === 'senha-segura', 'O segredo em arquivo nao foi carregado.');
+    } finally {
+        unset($_ENV['TEST_SECRET_FILE']);
+        unlink($path);
+    }
+});
 
 $test('LeadValidator rejeita campos obrigatórios ausentes', static function () use ($assert): void {
     $errors = LeadValidator::validate([]);

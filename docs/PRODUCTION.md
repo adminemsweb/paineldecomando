@@ -5,6 +5,7 @@
 - Docker Engine com Compose v2.
 - DNS e HTTPS configurados no proxy ou plataforma de hospedagem.
 - Credenciais reais de banco e, se o frete for habilitado, contrato/API dos Correios.
+- Conta SMTP válida e segredo externo `paineldecomando_smtp_password` criado no Swarm.
 - Telefone, WhatsApp, endereço e horário comercial confirmados.
 - Revisão jurídica final dos textos de garantia, trocas, privacidade e termos.
 
@@ -42,6 +43,14 @@ php backend/tests/run.php
 ```powershell
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 ```
+
+No Swarm, crie o segredo SMTP sem gravá-lo no repositório:
+
+```bash
+printf '%s' 'SENHA_SMTP' | docker secret create paineldecomando_smtp_password -
+```
+
+O domínio remetente também deve autorizar o IP do servidor no SPF e publicar DKIM para boa entregabilidade.
 
 O frontend Nginx atende a SPA e encaminha `/api/` internamente para o Apache/PHP. O MariaDB não publica porta externa no arquivo de produção.
 
