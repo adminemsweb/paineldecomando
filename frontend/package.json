@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:prod": "node scripts/check-production.mjs && tsc -b && vite build --mode production",
+    "build": "node scripts/generate-sitemap.mjs && tsc -b && vite build && node scripts/prerender-seo.mjs",
+    "build:prod": "node scripts/check-production.mjs && node scripts/generate-sitemap.mjs && tsc -b && vite build --mode production && node scripts/prerender-seo.mjs",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",
     "test": "vitest run",

@@ -5,6 +5,7 @@ services:
       dockerfile: docker/frontend/Dockerfile.prod
       args:
         VITE_API_URL: ${VITE_API_URL:-/api/v1}
+        VITE_SITE_URL: ${VITE_SITE_URL:-https://paineldecomando.com.br}
         VITE_COMPANY_NAME: ${VITE_COMPANY_NAME}
         VITE_COMPANY_SHORT_NAME: ${VITE_COMPANY_SHORT_NAME}
         VITE_COMPANY_LEGAL_NAME: ${VITE_COMPANY_LEGAL_NAME}

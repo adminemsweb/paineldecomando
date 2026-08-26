@@ -11,9 +11,9 @@ const productNavigation = [
     label: "Estrela-Triângulo",
     to: "/produtos?linha=estrela-triangulo",
     sections: [
-      { title: "Painel Estrela-Triângulo Econômico", to: "/produtos/painel-estrela-triangulo" },
-      { title: "Painel Estrela-Triângulo Padrão", to: "/produtos/painel-estrela-triangulo" },
-      { title: "Painel com Amperímetro", to: "/produtos/painel-estrela-triangulo" },
+      { title: "Econômico", to: "/produtos?linha=estrela-triangulo&subcategoria=economico", voltages: ["220V", "380V"] },
+      { title: "Padrão", to: "/produtos?linha=estrela-triangulo&subcategoria=padrao", voltages: ["220V", "380V"] },
+      { title: "Com Amperímetro", to: "/produtos?linha=estrela-triangulo&subcategoria=com-amperimetro", voltages: ["220V", "380V"] },
     ],
     featured: {
       name: "Painel Estrela-Triângulo Econômico",
@@ -24,7 +24,49 @@ const productNavigation = [
   {
     label: "Soft Starter",
     to: "/produtos?linha=soft-starter",
-    sections: [{ title: "Painel com Soft Starter", to: "/produtos?categoria=soft-starter" }],
+    sections: [
+      {
+        title: "SSW07 30A",
+        to: "/produtos?linha=soft-starter&busca=SSW07%2030A",
+        variants: [
+          { label: "220V · 10CV", to: "/produtos/painel-soft-starter-ssw07-30a-10cv-220v" },
+          { label: "380V · 20CV", to: "/produtos/painel-soft-starter-ssw07-30a-20cv-380v" },
+        ],
+      },
+      {
+        title: "SSW07 45A",
+        to: "/produtos?linha=soft-starter&busca=SSW07%2045A",
+        variants: [
+          { label: "220V · 15CV", to: "/produtos/painel-soft-starter-ssw07-45a-15cv-220v" },
+          { label: "380V · 30CV", to: "/produtos/painel-soft-starter-ssw07-45a-30cv-380v" },
+        ],
+      },
+      {
+        title: "SSW07 61A",
+        to: "/produtos?linha=soft-starter&busca=SSW07%2061A",
+        variants: [
+          { label: "220V · 20CV", to: "/produtos/painel-soft-starter-ssw07-61a-20cv-220v" },
+          { label: "380V · 40CV", to: "/produtos/painel-soft-starter-ssw07-61a-40cv-380v" },
+        ],
+      },
+      {
+        title: "SSW07 85A",
+        to: "/produtos?linha=soft-starter&busca=SSW07%2085A",
+        variants: [
+          { label: "220V · 30CV", to: "/produtos/painel-soft-starter-ssw07-85a-30cv-220v" },
+          { label: "380V · 30CV", to: "/produtos/painel-soft-starter-ssw07-85a-30cv-380v" },
+        ],
+      },
+      {
+        title: "Para Irrigação",
+        to: "/produtos?linha=soft-starter&busca=irriga%C3%A7%C3%A3o",
+        variants: [
+          { label: "220V · 50CV", to: "/produtos/painel-irrigacao-soft-starter-ssw07-50cv-220v" },
+          { label: "220V · 60CV", to: "/produtos/painel-irrigacao-soft-starter-ssw07-60cv-220v" },
+          { label: "220V · 125CV", to: "/produtos/painel-irrigacao-soft-starter-ssw07-125cv-220v" },
+        ],
+      },
+    ],
     featured: {
       name: "Painel com Soft Starter",
       image: "/images/montagem-painel-industrial-v2.jpg",
@@ -34,7 +76,7 @@ const productNavigation = [
   {
     label: "Inversor de Frequência",
     to: "/produtos?linha=inversor-de-frequencia",
-    sections: [{ title: "Painel com Inversor de Frequência", to: "/produtos?categoria=inversor-de-frequencia" }],
+    sections: [{ title: "Painel com Inversor de Frequência", to: "/produtos?linha=inversor-de-frequencia", voltages: ["220V", "380V"] }],
     featured: {
       name: "Painel com Inversor de Frequência",
       image: "/images/hero-painel-industrial-v2.jpg",
@@ -45,10 +87,10 @@ const productNavigation = [
     label: "Bomba de Incêndio",
     to: "/produtos?linha=bomba-de-incendio",
     sections: [
-      { title: "Painel Bomba de Incêndio Econômico", to: "/produtos?categoria=incendio" },
-      { title: "Painel Bomba de Incêndio Padrão", to: "/produtos?categoria=incendio" },
-      { title: "Painel Bomba de Incêndio Vermelho", to: "/produtos?categoria=incendio" },
-      { title: "Bomba Principal e Jockey", to: "/produtos?categoria=incendio" },
+      { title: "Econômico", to: "/produtos?linha=bomba-de-incendio", voltages: ["220V", "380V"] },
+      { title: "Padrão", to: "/produtos?linha=bomba-de-incendio", voltages: ["220V", "380V"] },
+      { title: "Caixa Vermelha", to: "/produtos?linha=bomba-de-incendio", voltages: ["220V", "380V"] },
+      { title: "Principal e Jockey", to: "/produtos?linha=bomba-de-incendio", voltages: ["220V", "380V"] },
     ],
     featured: {
       name: "Painel para Bomba de Incêndio",
@@ -59,7 +101,7 @@ const productNavigation = [
   {
     label: "Irrigação",
     to: "/produtos?linha=irrigacao",
-    sections: [{ title: "Painel para Irrigação", to: "/produtos?aplicacao=irrigacao" }],
+    sections: [{ title: "Painel para Irrigação", to: "/produtos?linha=irrigacao", voltages: ["220V", "380V"] }],
     featured: {
       name: "Painel para Irrigação",
       image: "/images/montagem-painel-industrial-v2.jpg",
@@ -69,7 +111,7 @@ const productNavigation = [
   {
     label: "Revezamento de Bombas",
     to: "/produtos?linha=revezamento",
-    sections: [{ title: "Painel para Revezamento de Bombas", to: "/produtos?categoria=revezamento" }],
+    sections: [{ title: "Painel para Revezamento de Bombas", to: "/produtos?linha=revezamento", voltages: ["220V", "380V"] }],
     featured: {
       name: "Painel para Revezamento de Bombas",
       image: "/images/montagem-painel-industrial-v2.jpg",
@@ -100,6 +142,12 @@ export function PublicLayout() {
   const [quoteSummary, setQuoteSummary] = useState("");
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
+  const selectedLine = new URLSearchParams(locationSearch).get("linha");
+  const activeProductGroup = pathname === "/produtos"
+    ? productNavigation.find((group) => group.to === "/produtos"
+      ? selectedLine === null
+      : new URLSearchParams(group.to.split("?")[1]).get("linha") === selectedLine)
+    : undefined;
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -250,7 +298,7 @@ export function PublicLayout() {
               {productNavigation.map((group) => (
                   <div className="product-nav__item" key={group.label}>
                     <Link
-                      className={pathname + locationSearch === group.to ? "product-nav__trigger active" : "product-nav__trigger"}
+                      className={activeProductGroup?.label === group.label ? "product-nav__trigger active" : "product-nav__trigger"}
                       to={group.to}
                       onClick={() => {
                         setOpen(false);

@@ -27,8 +27,7 @@ export function ListingPage({ kind }: { kind: keyof typeof labels }) {
 
 export function DetailPage({ kind }: { kind: string }) {
   const { slug } = useParams();
-  if (kind === 'produto' && slug?.startsWith('painel-estrela-triangulo')) return <StarDeltaProduct key={slug} slug={slug}/>;
-  if (kind === 'produto' && slug) return <ManagedProductDetail slug={slug}/>;
+  if (kind === 'produto' && slug) return <StarDeltaProduct key={slug} slug={slug}/>;
   return <><PageHero eyebrow="Detalhe técnico" title={slug?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') ?? kind} body={`Página individual de ${kind}, preparada para receber conteúdo da API.`}/><section className="section"><div className="container split"><div><h2>Informações da solução</h2><p>Características, aplicações, benefícios, especificações, mídia e relações serão exibidos aqui após o cadastro administrativo.</p></div><div><ButtonLink to={`/orcamento?interesse=${encodeURIComponent(slug ?? kind)}`}>Pedir orçamento</ButtonLink></div></div></section></>;
 }
 
@@ -77,7 +76,9 @@ function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: st
   const [products, setProducts] = useState<ManagedProduct[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [searchParams] = useSearchParams();
-  const [search, setSearch] = useState(searchParams.get('busca') ?? '');
+  const searchFromUrl = searchParams.get('busca') ?? '';
+  const [searchState, setSearchState] = useState({ source: searchFromUrl, value: searchFromUrl });
+  const search = searchState.source === searchFromUrl ? searchState.value : searchFromUrl;
   const [availability, setAvailability] = useState<'all' | 'available' | 'on_demand'>('all');
   const [sort, setSort] = useState<'featured' | 'name' | 'price_asc' | 'price_desc'>('featured');
   const [minPrice, setMinPrice] = useState('');
@@ -95,7 +96,7 @@ function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: st
     const filtered = (products ?? []).filter(product => {
       if (!productMatchesLine(product, activeLine.terms)) return false;
       if (activeSubcategory && !productMatchesLine(product, activeSubcategory.terms)) return false;
-      const searchable = normalizeCatalogText(`${product.name} ${product.slug} ${product.summary ?? ''} ${product.category_name ?? ''} ${product.reference_code ?? ''}`);
+      const searchable = normalizeCatalogText(`${product.name} ${product.slug} ${product.summary ?? ''} ${product.category_name ?? ''} ${product.reference_code ?? ''} ${product.voltages ?? ''}`);
       if (normalizedSearch && !searchable.includes(normalizedSearch)) return false;
       if (availability === 'available' && product.stock_status !== 'in_stock') return false;
       if (availability === 'on_demand' && product.stock_status !== 'on_demand') return false;
@@ -122,7 +123,7 @@ function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: st
       </aside>
       <div className="catalog-results">
         <header className="catalog-heading"><div className="catalog-heading__breadcrumb"><Link to="/">Início</Link><span>›</span>{activeSubcategory && <><Link to="/produtos?linha=estrela-triangulo">{activeLine.label}</Link><span>›</span></>}<strong>{activeSubcategory?.label || activeLine.label}</strong></div><div className="catalog-heading__row"><div><span>Catálogo profissional</span><h1>{activeSubcategory?.label || activeLine.title}</h1></div><label className="catalog-sort"><span>Ordenar por:</span><select value={sort} onChange={event => setSort(event.target.value as typeof sort)}><option value="featured">Destaques</option><option value="name">Nome</option><option value="price_asc">Menor preço</option><option value="price_desc">Maior preço</option></select></label></div><p>{activeLine.description}</p></header>
-        <div className="catalog-toolbar"><label className="catalog-search"><Icon name="search" size={20}/><span className="sr-only">Buscar produtos</span><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar por produto, modelo ou aplicação"/></label><span className="catalog-count">{products === null ? 'Carregando…' : `${visibleProducts.length} ${visibleProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}`}</span></div>
+        <div className="catalog-toolbar"><label className="catalog-search"><Icon name="search" size={20}/><span className="sr-only">Buscar produtos</span><input value={search} onChange={event => setSearchState({ source: searchFromUrl, value: event.target.value })} placeholder="Buscar por produto, modelo ou aplicação"/></label><span className="catalog-count">{products === null ? 'Carregando…' : `${visibleProducts.length} ${visibleProducts.length === 1 ? 'produto encontrado' : 'produtos encontrados'}`}</span></div>
         {products !== null && visibleProducts.length === 0 && <div className="empty-state"><h2>Nenhum produto encontrado</h2><p>Tente outra busca ou consulte todas as categorias.</p><ButtonLink to="/produtos" variant="secondary">Ver todos os produtos</ButtonLink></div>}
         <div className="catalog-grid">{visibleProducts.map(product => {
           const isAvailable = product.stock_status === 'in_stock' && (product.stock_quantity ?? 1) > 0;
@@ -136,22 +137,6 @@ function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: st
       </div>
     </div></section>
   </>;
-}
-
-function ManagedProductDetail({ slug }: { slug: string }) {
-  const [product, setProduct] = useState<ManagedProduct | null>(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => { apiRequest<ManagedProduct>(`/products/${slug}`).then(response => setProduct(response.data)).catch(() => setFailed(true)); }, [slug]);
-  if (!product && !failed) return <div className="page-loader" role="status">Carregando produto…</div>;
-  if (failed) {
-    if (slug === 'painel-estrela-triangulo') return <StarDeltaProduct/>;
-    return <><PageHero eyebrow="Produto" title="Produto não encontrado" body="Este produto não está publicado ou não existe mais."/><section className="section"><div className="container"><ButtonLink to="/produtos">Voltar ao catálogo</ButtonLink></div></section></>;
-  }
-  const current = product!;
-  return <><PageHero eyebrow="Solução industrial" title={current.name} body={current.summary || 'Projeto desenvolvido conforme os requisitos da aplicação.'}/><section className="section"><div className="container managed-product-detail">
-    <div className="managed-product-detail__image"><img src={current.image_url || '/images/hero-painel-comando-poster.jpg'} alt={current.name}/></div>
-    <article><span className="eyebrow">Excelência em Engenharia e Qualidade {current.brand || companyConfig.name}</span><h2>{current.name} | {current.brand || companyConfig.name}</h2><dl>{current.brand && <div><dt>Marca</dt><dd>{current.brand}</dd></div>}{current.reference_code && <div><dt>Referência</dt><dd>{current.reference_code}</dd></div>}{current.model && <div><dt>Modelo</dt><dd>{current.model}</dd></div>}{current.lead_time && <div><dt>Disponibilidade</dt><dd>{current.lead_time}</dd></div>}{current.voltages && <div><dt>Tensão</dt><dd>{current.voltages}</dd></div>}{current.power_range && <div><dt>Potência</dt><dd>{current.power_range}</dd></div>}<div><dt>Garantia</dt><dd>{current.warranty_days ?? 365} dias</dd></div></dl><p>{current.description || current.summary}</p>{current.features?.length ? <><h3>Características técnicas</h3><ul>{current.features.map(item => <li key={item}>{item}</li>)}</ul></> : null}{current.components?.length ? <><h3>Principais componentes</h3><ul>{current.components.map(item => <li key={item}>{item}</li>)}</ul></> : null}{current.benefits?.length ? <><h3>Benefícios e diferenciais</h3><ul>{current.benefits.map(item => <li key={item}>{item}</li>)}</ul></> : null}<section className="managed-product-detail__note"><h3>Personalização sob medida</h3><p>A {companyConfig.name} oferece personalização técnica sob demanda, mantendo a segurança, o desempenho e a qualidade da marca.</p></section><section className="managed-product-detail__note"><h3>Instalação e uso técnico</h3><p>A instalação e o manuseio devem ser realizados por profissionais qualificados. Dúvidas técnicas específicas sobre instalação devem ser direcionadas a profissionais habilitados da área elétrica.</p></section><aside className="managed-product-detail__warning"><strong>Atenção</strong><p>Os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos utiliza flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com simples aperto manual.</p></aside><ButtonLink to={`/orcamento?interesse=${encodeURIComponent(current.slug)}`}>Solicitar modelo personalizado</ButtonLink></article>
-  </div></section></>;
 }
 
 function StorefrontListing({ copy }: { copy: { eyebrow: string; title: string; body: string } }) {
@@ -208,11 +193,20 @@ function StarDeltaProduct({ slug = 'painel-estrela-triangulo' }: { slug?: string
     { name: 'Painel com Inversor de Frequência', detail: 'Controle preciso de velocidade', image: '/images/hero-painel-industrial-v2.jpg', to: '/produtos?categoria=inversor-de-frequencia' },
     { name: 'Painel para Bombas', detail: 'Proteção e alternância', image: '/images/hero-painel-comando-poster.jpg', to: '/produtos?categoria=bombas' },
   ];
-  const isFirePumpPanel = normalizeCatalogText(managed?.category_name || '').includes('incendio');
-  const breadcrumbCategory = isFirePumpPanel ? 'Bomba de Incêndio' : managed?.category_name || 'Painéis de partida';
-  const breadcrumbTarget = isFirePumpPanel ? '/produtos?linha=bomba-de-incendio' : '/produtos?linha=estrela-triangulo';
+  const normalizedProductType = normalizeCatalogText(`${managed?.name || ''} ${managed?.category_name || ''}`);
+  const breadcrumb = normalizedProductType.includes('soft starter')
+    ? { label: 'Painel com Soft Starter', to: '/produtos?linha=soft-starter' }
+    : normalizedProductType.includes('inversor')
+      ? { label: 'Inversor de Frequência', to: '/produtos?linha=inversor-de-frequencia' }
+      : normalizedProductType.includes('incendio')
+        ? { label: 'Bomba de Incêndio', to: '/produtos?linha=bomba-de-incendio' }
+        : normalizedProductType.includes('irrigacao')
+          ? { label: 'Irrigação', to: '/produtos?linha=irrigacao' }
+          : normalizedProductType.includes('revezamento')
+            ? { label: 'Revezamento de Bombas', to: '/produtos?linha=revezamento' }
+            : { label: managed?.category_name || 'Painéis de partida', to: '/produtos?linha=estrela-triangulo' };
   return <>
-    <div className="product-breadcrumb"><div className="container"><Link to="/">Início</Link><span>/</span><Link to="/produtos">Produtos</Link><span>/</span><Link to={breadcrumbTarget}>{breadcrumbCategory}</Link><span>/</span><strong>{productName}</strong></div></div>
+    <div className="product-breadcrumb"><div className="container"><Link to="/">Início</Link><span>/</span><Link to="/produtos">Produtos</Link><span>/</span><Link to={breadcrumb.to}>{breadcrumb.label}</Link><span>/</span><strong>{productName}</strong></div></div>
     <section className="product-detail"><div className="container">
       <div className="product-detail__grid">
         <div className="product-gallery">
@@ -231,7 +225,7 @@ function StarDeltaProduct({ slug = 'painel-estrela-triangulo' }: { slug?: string
           <div className="product-summary__topline"><span className="product-summary__category">{managed?.category_name || 'Painéis de partida'}</span><span>Ref: {managed?.reference_code || 'PAINEL-E.T-15CV+MAN-AUT.ECO'}</span></div>
           <h1>{productTitle}</h1>
           <div className="product-rating-summary"><RatingStars rating={averageRating}/><strong>{averageRating.toFixed(1).replace('.', ',')}</strong><button type="button" onClick={() => setActiveTab('reviews')}>{reviewRatings.length} avaliações</button></div>
-          <dl className="product-summary__meta"><div><dt>Marca</dt><dd>{managed?.brand || companyConfig.name}</dd></div><div><dt>Modelo</dt><dd>{managed?.model || 'Painel Estrela Triângulo'}</dd></div><div><dt>Disponibilidade</dt><dd className={isOutOfStock ? 'product-stock product-stock--out' : 'product-stock'}>{stockText}</dd></div><div><dt>Garantia</dt><dd>{managed?.warranty_days ?? 365} dias</dd></div></dl>
+          <dl className="product-summary__meta"><div><dt>Marca</dt><dd>{managed?.brand || companyConfig.name}</dd></div><div><dt>Modelo</dt><dd>{managed?.model || managed?.category_name || 'Painel de comando'}</dd></div><div><dt>Disponibilidade</dt><dd className={isOutOfStock ? 'product-stock product-stock--out' : 'product-stock'}>{stockText}</dd></div><div><dt>Garantia</dt><dd>{managed?.warranty_days ?? 365} dias</dd></div></dl>
 
           <div className="product-buybox">
             <div className="product-buybox__price"><span>Preço à vista</span><strong>{price}</strong>{installmentPrice && <small>ou {installments}x de {installmentPrice} sem juros</small>}</div>

@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
-Sitemap: https://DOMINIO-A-CONFIGURAR.com.br/sitemap.xml
-
+Sitemap: https://paineldecomando.com.br/sitemap.xml

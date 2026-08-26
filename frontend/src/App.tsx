@@ -1,3 +1,4 @@
 import { AppRoutes } from './routes/AppRoutes';
-export default function App() { return <AppRoutes/>; }
+import { SiteSeo } from './components/seo/SiteSeo';
 
+export default function App() { return <><SiteSeo/><AppRoutes/></>; }
