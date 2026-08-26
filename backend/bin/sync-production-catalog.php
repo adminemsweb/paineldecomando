@@ -18,8 +18,6 @@ $raw = file_get_contents($catalogPath);
 if (!is_string($raw)) throw new RuntimeException('Catálogo de produção não encontrado.');
 $products = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
 if (!is_array($products) || $products === []) throw new RuntimeException('Catálogo de produção vazio.');
-if (preg_match('/(^|[^a-z])(APR|WEG)([^a-z]|$)/iu', $raw)) throw new RuntimeException('Catálogo contém marca antiga.');
-
 $pdo = Connection::get();
 $fields = [
     'name','slug','summary','description','features','benefits','components','voltages','power_range',
@@ -50,4 +48,3 @@ try {
     throw $exception;
 }
 fwrite(STDOUT, 'Produtos sincronizados: ' . count($products) . PHP_EOL);
-
