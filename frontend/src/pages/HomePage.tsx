@@ -5,20 +5,27 @@ import { Icon } from '../components/common/Icon';
 import { companyConfig } from '../constants/company';
 
 const popularProducts = [
-  { code: '01', title: 'Painel Estrela-Triângulo', detail: 'Partida com redução de corrente', to: '/produtos/painel-estrela-triangulo' },
-  { code: '02', title: 'Painel com Inversor', detail: 'Controle de velocidade e processo', to: '/produtos?categoria=inversor-de-frequencia' },
-  { code: '03', title: 'Painel para Bombas', detail: 'Comando, proteção e revezamento', to: '/produtos?categoria=bombas' },
-  { code: '04', title: 'Painel com Soft Starter', detail: 'Partidas e paradas controladas', to: '/produtos?categoria=soft-starter' },
+  { code: '01', title: 'Painel Estrela-Triângulo', detail: 'Partida com redução de corrente', to: '/produtos?linha=estrela-triangulo' },
+  { code: '02', title: 'Painel com Inversor', detail: 'Controle de velocidade e processo', to: '/produtos?linha=inversor-de-frequencia' },
+  { code: '03', title: 'Painel para Bombas', detail: 'Comando, proteção e segurança', to: '/produtos?linha=bomba-de-incendio' },
+  { code: '04', title: 'Painel com Soft Starter', detail: 'Partidas e paradas controladas', to: '/produtos?linha=soft-starter' },
 ];
 
 const products = [
-  { category: 'Painéis de partida', name: 'Painel Estrela-Triângulo', description: 'Redução da corrente de partida para motores industriais.', image: '/images/hero-painel-comando-poster.jpg', to: '/produtos/painel-estrela-triangulo', badge: 'Em destaque' },
-  { category: 'Acionamento', name: 'Painel com Soft Starter', description: 'Partidas e paradas suaves com proteção adequada à carga.', image: '/images/montagem-painel-industrial-v2.jpg', to: '/produtos?categoria=soft-starter' },
-  { category: 'Controle de velocidade', name: 'Painel com Inversor de Frequência', description: 'Controle preciso de motores e adequação ao processo.', image: '/images/hero-painel-industrial-v2.jpg', to: '/produtos?categoria=inversor-de-frequencia' },
-  { category: 'Sistemas de bombeamento', name: 'Painel para Bombas', description: 'Comando, proteção e alternância para operação confiável.', image: '/images/hero-painel-comando-poster.jpg', to: '/produtos?categoria=bombas' },
+  { category: 'Bomba de incêndio', name: 'Painel Bomba de Incêndio 10CV 220V', description: 'Acionamento estrela-triângulo seguro para bombas de incêndio trifásicas.', image: '/images/painel-bomba-incendio-10cv-220v-vermelho.png', to: '/produtos/painel-estrela-triangulo-bomba-incendio-10cv-220v', price: 'R$ 2.150,00', installment: '3x de R$ 716,67', badge: 'Em destaque' },
+  { category: 'Acionamento', name: 'Painel Soft Starter SSW07 45A 30CV 380V', description: 'Partida suave e proteção para motores trifásicos de até 30 CV.', image: '/images/painel-soft-starter-com-logo.png', to: '/produtos/painel-soft-starter-ssw07-45a-30cv-380v', price: 'R$ 6.247,50', installment: '3x de R$ 2.082,50' },
+  { category: 'Controle de velocidade', name: 'Painel com Inversor CFW300 1CV 220V', description: 'Controle preciso de velocidade com entrada monofásica e saída trifásica.', image: '/images/painel-inversor-cfw300-1cv-220v-principal.png', to: '/produtos/painel-inversor-cfw300-1cv-220v-mono', price: 'R$ 2.205,00', installment: '3x de R$ 735,00' },
+  { category: 'Bomba de incêndio', name: 'Painel Bomba de Incêndio 20CV + Jockey 1CV', description: 'Comando manual e automático para sistemas de combate a incêndio em 380 V.', image: '/images/painel-bomba-incendio-20cv-jockey-1cv-380v-frente.png', to: '/produtos/painel-bomba-incendio-20cv-jockey-1cv-380v', price: 'R$ 2.128,00', installment: '3x de R$ 709,33' },
 ];
 
 const applications = ['Bombas', 'Compressores', 'Ventiladores', 'Irrigação', 'Saneamento', 'Máquinas industriais'];
+
+const manufacturingSteps = [
+  { code: '01', title: 'Levantamento', detail: 'Entendimento da aplicação, cargas e condições de operação.' },
+  { code: '02', title: 'Engenharia', detail: 'Definição técnica, dimensionamento e alinhamento do escopo.' },
+  { code: '03', title: 'Fabricação', detail: 'Montagem, identificação e organização dos componentes.' },
+  { code: '04', title: 'Validação', detail: 'Inspeções, testes funcionais e preparação para entrega.' },
+];
 
 const testimonials = [
   { name: 'Marcos P.', area: 'Comprador industrial', product: 'Painel Estrela-Triângulo', rating: 5, text: 'O painel chegou bem acabado, com os componentes identificados e a montagem interna organizada.' },
@@ -76,7 +83,6 @@ const heroSlides = [
 export default function HomePage() {
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [testimonialPaused, setTestimonialPaused] = useState(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -86,17 +92,15 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (testimonialPaused) return;
     const timer = window.setInterval(() => {
       setActiveTestimonial(current => (current + 1) % testimonials.length);
     }, 4000);
     return () => window.clearInterval(timer);
-  }, [testimonialPaused]);
+  }, []);
 
   const heroSlide = heroSlides[activeHeroSlide];
   const testimonialRating = testimonials.reduce((total, testimonial) => total + testimonial.rating, 0) / testimonials.length;
   const visibleTestimonials = [0, 1, 2].map(offset => testimonials[(activeTestimonial + offset) % testimonials.length]);
-  const changeTestimonial = (direction: number) => setActiveTestimonial(current => (current + direction + testimonials.length) % testimonials.length);
 
   return <div className="shop-home">
     <section className={`storefront-hero storefront-hero--${heroSlide.theme}`} aria-roledescription="carrossel" aria-label="Destaques de produtos">
@@ -127,11 +131,27 @@ export default function HomePage() {
 
     <section className="shop-products" aria-labelledby="products-title">
       <div className="container">
-        <header className="shop-section-heading"><div><span>Produtos em destaque</span><h2 id="products-title">Soluções para comprar ou cotar.</h2></div><p>Os valores serão exibidos quando configurações, prazos e condições comerciais forem aprovados.</p></header>
+        <header className="shop-section-heading"><div><span>Produtos em destaque</span><h2 id="products-title">Painéis prontos para comprar.</h2></div><p>Compare modelos, preços e configurações para encontrar o painel adequado à sua aplicação.</p></header>
         <div className="shop-product-grid">{products.map(product => <article className="shop-product" key={product.name}>
-          <Link className="shop-product__image" to={product.to}><img src={product.image} alt="" loading="lazy"/>{product.badge && <span>{product.badge}</span>}</Link>
-          <div className="shop-product__content"><small>{product.category}</small><h3><Link to={product.to}>{product.name}</Link></h3><p>{product.description}</p><div className="shop-product__price"><span><small>Valor</small><strong>Sob consulta</strong></span><Link to={product.to} aria-label={`Ver ${product.name}`}>→</Link></div></div>
+          <Link className="shop-product__image" to={product.to}><img src={product.image} alt={product.name} loading="lazy"/>{product.badge && <span>{product.badge}</span>}</Link>
+          <div className="shop-product__content"><small>{product.category}</small><h3><Link to={product.to}>{product.name}</Link></h3><p>{product.description}</p><div className="shop-product__price"><span><small>Valor</small><strong>{product.price}</strong><small>{product.installment} sem juros</small></span><Link to={product.to} aria-label={`Ver ${product.name}`}>→</Link></div></div>
         </article>)}</div>
+      </div>
+    </section>
+
+    <section className="manufacturing-flow" aria-labelledby="manufacturing-flow-title">
+      <div className="container">
+        <header className="manufacturing-flow__heading">
+          <span>Como trabalhamos</span>
+          <h2 id="manufacturing-flow-title">Fluxo de Fabricação</h2>
+          <p>Do levantamento inicial aos testes finais, cada painel passa por uma sequência técnica clara e controlada.</p>
+        </header>
+        <ol className="manufacturing-flow__steps">
+          {manufacturingSteps.map((step, index) => <li className={`manufacturing-flow__step manufacturing-flow__step--${index + 1}`} key={step.code}>
+            <span aria-hidden="true">{step.code}</span>
+            <div><h3>{step.title}</h3><p>{step.detail}</p></div>
+          </li>)}
+        </ol>
       </div>
     </section>
 
@@ -142,13 +162,13 @@ export default function HomePage() {
       </div>
     </section>
 
-    <section className="shop-testimonials" aria-labelledby="testimonials-title" aria-roledescription="carrossel"><div className="container"><header className="shop-testimonials__heading"><div><span>Feedbacks de clientes</span><h2 id="testimonials-title">Quem compra nossos painéis de comando recomenda.</h2><p>Opiniões sobre atendimento, acabamento e organização dos painéis entregues.</p><div className="shop-testimonials__rating"><strong>{testimonialRating.toFixed(1).replace('.', ',')}</strong><span aria-label={`${testimonialRating.toFixed(1).replace('.', ',')} de 5 estrelas`}>★★★★★</span><small>Média das {testimonials.length} avaliações exibidas</small></div></div><div className="shop-testimonials__controls"><span>{String(activeTestimonial + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}</span><button type="button" aria-label="Depoimento anterior" onClick={() => changeTestimonial(-1)}>←</button><button type="button" aria-label={testimonialPaused ? 'Continuar carrossel automático' : 'Pausar carrossel automático'} onClick={() => setTestimonialPaused(current => !current)}>{testimonialPaused ? '▶' : 'Ⅱ'}</button><button type="button" aria-label="Próximo depoimento" onClick={() => changeTestimonial(1)}>→</button></div></header><div className="shop-testimonials__viewport" aria-live={testimonialPaused ? 'polite' : 'off'}><div className="shop-testimonials__grid" key={activeTestimonial}>{visibleTestimonials.map(testimonial => <article className="testimonial-card" key={testimonial.name}><div className="testimonial-card__top"><span>{testimonial.product}</span><div className="testimonial-card__stars" aria-label={`${testimonial.rating} de 5 estrelas`}>{[1, 2, 3, 4, 5].map(star => <i className={star <= testimonial.rating ? 'active' : ''} aria-hidden="true" key={star}>★</i>)}</div></div><p>“{testimonial.text}”</p><footer className="testimonial-card__person"><span aria-hidden="true">{testimonial.name.split(' ').map(part => part.charAt(0)).join('').slice(0, 2)}</span><div><strong>{testimonial.name}</strong><small>{testimonial.area}</small></div><Icon name="check" size={17}/></footer></article>)}</div></div><div className="shop-testimonials__pages" aria-label="Selecionar depoimento">{testimonials.map((testimonial, index) => <button type="button" className={index === activeTestimonial ? 'active' : ''} aria-label={`Mostrar depoimento ${index + 1} de ${testimonials.length}`} aria-current={index === activeTestimonial ? 'true' : undefined} onClick={() => setActiveTestimonial(index)} key={testimonial.name}/>)}</div></div></section>
+    <section className="shop-testimonials" aria-labelledby="testimonials-title" aria-roledescription="carrossel"><div className="container"><header className="shop-testimonials__heading"><div><span>Feedbacks de clientes</span><h2 id="testimonials-title">Quem compra nossos painéis de comando recomenda.</h2><p>Opiniões sobre atendimento, acabamento e organização dos painéis entregues.</p><div className="shop-testimonials__rating"><strong>{testimonialRating.toFixed(1).replace('.', ',')}</strong><span aria-label={`${testimonialRating.toFixed(1).replace('.', ',')} de 5 estrelas`}>★★★★★</span><small>Média das {testimonials.length} avaliações exibidas</small></div></div></header><div className="shop-testimonials__viewport" aria-live="off"><div className="shop-testimonials__grid" key={activeTestimonial}>{visibleTestimonials.map(testimonial => <article className="testimonial-card" key={testimonial.name}><div className="testimonial-card__top"><span>{testimonial.product}</span><div className="testimonial-card__stars" aria-label={`${testimonial.rating} de 5 estrelas`}>{[1, 2, 3, 4, 5].map(star => <i className={star <= testimonial.rating ? 'active' : ''} aria-hidden="true" key={star}>★</i>)}</div></div><p>“{testimonial.text}”</p><footer className="testimonial-card__person"><span aria-hidden="true">{testimonial.name.split(' ').map(part => part.charAt(0)).join('').slice(0, 2)}</span><div><strong>{testimonial.name}</strong><small>{testimonial.area}</small></div><Icon name="check" size={17}/></footer></article>)}</div></div><div className="shop-testimonials__pages" aria-label="Selecionar depoimento">{testimonials.map((testimonial, index) => <button type="button" className={index === activeTestimonial ? 'active' : ''} aria-label={`Mostrar depoimento ${index + 1} de ${testimonials.length}`} aria-current={index === activeTestimonial ? 'true' : undefined} onClick={() => setActiveTestimonial(index)} key={testimonial.name}/>)}</div></div></section>
 
     <section className="shop-faq" aria-labelledby="faq-title"><div className="container shop-faq__inner"><header><span>FAQ</span><h2 id="faq-title">Perguntas frequentes</h2><p>Tudo o que você precisa saber antes de definir o painel ideal para sua aplicação.</p></header><div className="shop-faq__list">{frequentlyAskedQuestions.map(item => <details key={item.question}><summary>{item.question}<span aria-hidden="true"/></summary><p>{item.answer}</p></details>)}</div></div></section>
 
     <section className="shop-partner" aria-labelledby="partner-title">
       <div className="container shop-partner__card">
-        <div className="shop-partner__brand"><span>Parceiros em destaque</span><div className="shop-partner__brand-logos"><img className="shop-partner__mr-logo" src="/brand/mr-drives-logo-transparent.png" alt="MR Drives"/><i aria-hidden="true"/><img className="shop-partner__metal-logo" src="/brand/metal-life-logo.png" alt="Metal Life"/></div></div>
+        <div className="shop-partner__brand"><span>Parceiros em destaque</span><video className="shop-partner__brand-video" src="/videos/marcas.mp4" aria-label="Marcas parceiras MR Drives e Metal Life" autoPlay loop muted playsInline preload="metadata"/></div>
         <div className="shop-partner__content"><span>Em parceria com MR Drives e Metal Life</span><h2 id="partner-title">Painéis de comando com componentes selecionados.</h2><p>Conte com apoio para especificar, cotar e escolher a configuração adequada do painel para sua aplicação.</p><div className="shop-partner__tags"><span>Painéis com inversor</span><span>Painéis com Soft Starter</span></div></div>
         <div className="shop-partner__actions"><ButtonLink to="/produtos?parceiro=mr-drives">Ver produtos</ButtonLink><a href={`https://wa.me/${companyConfig.whatsapp}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={19}/> Falar no WhatsApp</a></div>
       </div>
