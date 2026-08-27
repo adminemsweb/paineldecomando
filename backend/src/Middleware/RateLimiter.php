@@ -6,14 +6,15 @@ namespace App\Middleware;
 
 use App\Config\Env;
 use App\Core\Logger;
+use App\Core\RequestContext;
 use App\Core\Response;
 use RuntimeException;
 
 final class RateLimiter
 {
-    public static function enforce(string $scope, int $maximum, int $windowSeconds): void
+    public static function enforce(string $scope, int $maximum, int $windowSeconds, ?string $client = null, bool $failClosed = false): void
     {
-        $result = self::attempt($scope, $maximum, $windowSeconds);
+        $result = self::attempt($scope, $maximum, $windowSeconds, $client, $failClosed);
         header('X-RateLimit-Limit: ' . $maximum);
         header('X-RateLimit-Remaining: ' . $result['remaining']);
         if ($result['allowed']) return;
@@ -28,16 +29,16 @@ final class RateLimiter
     }
 
     /** @return array{allowed:bool,remaining:int,retry_after:int,client_id:string} */
-    public static function attempt(string $scope, int $maximum, int $windowSeconds, ?string $client = null): array
+    public static function attempt(string $scope, int $maximum, int $windowSeconds, ?string $client = null, bool $failClosed = false): array
     {
         if ($maximum < 1 || $windowSeconds < 1) throw new RuntimeException('Configuração de rate limit inválida.');
-        $client ??= (string)($_SERVER['REMOTE_ADDR'] ?? 'cli');
+        $client ??= RequestContext::clientIp();
         $clientId = substr(hash('sha256', $client), 0, 12);
         $key = hash('sha256', $scope . '|' . $client);
         $directory = Env::get('RATE_LIMIT_PATH', dirname(__DIR__, 2) . '/storage/rate-limits') ?? '';
-        if ($directory === '' || (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory))) {
+        if ($directory === '' || (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory))) {
             Logger::error('Rate limit storage unavailable', ['scope'=>$scope]);
-            return ['allowed'=>true, 'remaining'=>$maximum, 'retry_after'=>0, 'client_id'=>$clientId];
+            return ['allowed'=>!$failClosed, 'remaining'=>$failClosed ? 0 : $maximum, 'retry_after'=>$failClosed ? 60 : 0, 'client_id'=>$clientId];
         }
 
         $file = $directory . '/' . $key . '.json';
@@ -45,7 +46,7 @@ final class RateLimiter
         if ($handle === false || !flock($handle, LOCK_EX)) {
             if (is_resource($handle)) fclose($handle);
             Logger::error('Rate limit lock unavailable', ['scope'=>$scope]);
-            return ['allowed'=>true, 'remaining'=>$maximum, 'retry_after'=>0, 'client_id'=>$clientId];
+            return ['allowed'=>!$failClosed, 'remaining'=>$failClosed ? 0 : $maximum, 'retry_after'=>$failClosed ? 60 : 0, 'client_id'=>$clientId];
         }
 
         $now = time();
@@ -59,9 +60,16 @@ final class RateLimiter
         }
         $count++;
         rewind($handle);
-        ftruncate($handle, 0);
-        fwrite($handle, json_encode(['started_at'=>$startedAt,'count'=>$count], JSON_THROW_ON_ERROR));
-        fflush($handle);
+        $payload = json_encode(['started_at'=>$startedAt,'count'=>$count], JSON_THROW_ON_ERROR);
+        $persisted = ftruncate($handle, 0)
+            && fwrite($handle, $payload) === strlen($payload)
+            && fflush($handle);
+        if (!$persisted) {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+            Logger::error('Rate limit state could not be persisted', ['scope'=>$scope]);
+            return ['allowed'=>!$failClosed, 'remaining'=>$failClosed ? 0 : $maximum, 'retry_after'=>$failClosed ? 60 : 0, 'client_id'=>$clientId];
+        }
         flock($handle, LOCK_UN);
         fclose($handle);
 

@@ -10,7 +10,7 @@ afterEach(() => {
 
 describe('catálogo de produtos', () => {
   it('filtra a linha selecionada e aponta os cards para o produto', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
       data: [
         { id: 3, name: 'Painel Estrela Triângulo 15CV', slug: 'painel-estrela-triangulo', category_name: 'Painéis de partida', image_url: '/estrela.png', price_cents: 124700, installments: 3, stock_status: 'in_stock', stock_quantity: 5 },
         { id: 4, name: 'Painel com Soft Starter', slug: 'painel-com-soft-starter', category_name: 'Soft Starter', image_url: '/soft.png', stock_status: 'on_demand' },
@@ -25,6 +25,29 @@ describe('catálogo de produtos', () => {
     expect(screen.getAllByRole('link', { name: /Painel Estrela Triângulo 15CV/i })[0]).toHaveAttribute('href', '/produtos/painel-estrela-triangulo');
     expect(screen.getByText('1 produto encontrado')).toBeInTheDocument();
     expect(screen.getByText('ou 3x de R$ 415,67 sem juros')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/products?per_page=50&page=1'), expect.any(Object));
+  });
+
+  it('exibe os inversores ao selecionar a linha de inversor de frequência', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        data: [
+          { id: 3, name: 'Painel Estrela Triângulo 15CV', slug: 'painel-estrela-triangulo', category_name: 'Painéis de partida', image_url: '/estrela.png', price_cents: 124700, installments: 3, stock_status: 'in_stock', stock_quantity: 5 },
+        ],
+        meta: { page: 1, per_page: 50, total: 51, total_pages: 2 },
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+      data: [
+        { id: 52, name: 'Painel com Inversor CFW300 1CV', slug: 'painel-inversor-cfw300-1cv-220v-mono', category_name: 'Painel com Inversor de Frequência', image_url: '/inversor.png', price_cents: 220500, installments: 3, stock_status: 'in_stock', stock_quantity: 1 },
+      ],
+        meta: { page: 2, per_page: 50, total: 51, total_pages: 2 },
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    render(<MemoryRouter initialEntries={['/produtos?linha=inversor-de-frequencia']}><ListingPage kind="produtos"/></MemoryRouter>);
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Painel com Inversor CFW300 1CV' })).toBeInTheDocument());
+    expect(screen.queryByRole('heading', { name: 'Painel Estrela Triângulo 15CV' })).not.toBeInTheDocument();
+    expect(screen.getByText('1 produto encontrado')).toBeInTheDocument();
   });
 
   it('usa o layout completo de produto nos modelos Estrela-Triângulo', async () => {

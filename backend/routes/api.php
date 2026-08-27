@@ -14,6 +14,7 @@ use App\Services\LeadService;
 use App\Services\CorreiosService;
 use App\Services\CepService;
 use App\Validators\LeadValidator;
+use App\Middleware\RateLimiter;
 
 $router->get('/api/v1/health', static fn() => Response::success(['service' => 'site-industrial-api', 'version' => '1.0.0'], 'API disponível.'));
 
@@ -30,6 +31,8 @@ foreach (['categories','segments','services','projects','posts'] as $resource) {
 }
 
 $router->post('/api/v1/leads', static function (Request $request) {
+    RateLimiter::enforce('lead-create-client', 5, 3600, failClosed: true);
+    RateLimiter::enforce('lead-create-global', 100, 3600, 'global', true);
     $data = $request->body();
     $errors = LeadValidator::validate($data);
     if ($errors) Response::error('Revise os campos informados.', 422, $errors);
@@ -38,9 +41,13 @@ $router->post('/api/v1/leads', static function (Request $request) {
 });
 
 $router->post('/api/v1/shipping/quote', static function (Request $request) {
+    RateLimiter::enforce('shipping-quote-client', 20, 900, failClosed: true);
+    RateLimiter::enforce('shipping-quote-global', 60, 60, 'global', true);
     (new ShippingController(new CorreiosService()))->quote($request);
 });
 $router->post('/api/v1/shipping/cep', static function (Request $request) {
+    RateLimiter::enforce('shipping-cep-client', 60, 900, failClosed: true);
+    RateLimiter::enforce('shipping-cep-global', 120, 60, 'global', true);
     (new ShippingController(new CorreiosService(), new CepService()))->lookupCep($request);
 });
 

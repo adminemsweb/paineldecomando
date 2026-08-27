@@ -89,6 +89,10 @@ curl --fail --silent --show-error --retry 12 --retry-delay 5 \
   https://paineldecomando.com.br/api/v1/health >/dev/null
 curl --fail --silent --show-error --retry 6 --retry-delay 3 \
   https://paineldecomando.com.br/produtos/painel-estrela-triangulo >/dev/null
+curl --silent --show-error --head http://paineldecomando.com.br/ \
+  | grep -Eiq '^location: https://paineldecomando\.com\.br/'
+curl --silent --show-error --head https://paineldecomando.com.br/ \
+  | grep -Eiq '^strict-transport-security: max-age=31536000'
 
 ln -sfn "$release_dir" "${production_root}/current"
 deployed=0

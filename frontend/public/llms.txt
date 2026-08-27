@@ -1,0 +1,29 @@
+# Painel de Comando
+
+> Loja brasileira de painéis elétricos de comando, acionamentos e automação industrial para motores, bombas, irrigação e outras aplicações industriais.
+
+## Páginas principais
+
+- [Início](https://paineldecomando.com.br/): visão geral das soluções e produtos em destaque.
+- [Catálogo de produtos](https://paineldecomando.com.br/produtos): catálogo completo de painéis de comando publicados.
+- [Empresa](https://paineldecomando.com.br/empresa): informações sobre a Painel de Comando.
+- [Serviços](https://paineldecomando.com.br/servicos): projetos, montagem, instalação e manutenção.
+- [Contato](https://paineldecomando.com.br/contato): canais de atendimento e solicitação de orçamento.
+
+## Categorias de produtos
+
+- [Painéis Estrela-Triângulo](https://paineldecomando.com.br/produtos?linha=estrela-triangulo)
+- [Painéis com Soft Starter](https://paineldecomando.com.br/produtos?linha=soft-starter)
+- [Painéis com Inversor de Frequência](https://paineldecomando.com.br/produtos?linha=inversor-de-frequencia)
+- [Painéis para Bomba de Incêndio](https://paineldecomando.com.br/produtos?linha=bomba-de-incendio)
+- [Painéis para Irrigação](https://paineldecomando.com.br/produtos?linha=irrigacao)
+- [Painéis para Revezamento de Bombas](https://paineldecomando.com.br/produtos?linha=revezamento)
+
+## Informações para sistemas automatizados
+
+- Site oficial: https://paineldecomando.com.br/
+- Sitemap XML: https://paineldecomando.com.br/sitemap.xml
+- Robots: https://paineldecomando.com.br/robots.txt
+- Idioma principal: português do Brasil
+- Mercado atendido: Brasil
+

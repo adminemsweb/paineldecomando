@@ -88,7 +88,19 @@ function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: st
   const activeLine = catalogLines.find(line => line.slug === requestedLine) ?? catalogLines[0];
   const requestedSubcategory = searchParams.get('subcategoria');
   const activeSubcategory = activeLine.slug === 'estrela-triangulo' ? starDeltaSubcategories.find(category => category.slug === requestedSubcategory) : undefined;
-  useEffect(() => { apiRequest<ManagedProduct[]>('/products?per_page=50').then(response => setProducts(response.data)).catch(() => setFailed(true)); }, []);
+  useEffect(() => {
+    let active = true;
+    async function loadProducts() {
+      const firstPage = await apiRequest<ManagedProduct[]>('/products?per_page=50&page=1');
+      const totalPages = firstPage.meta?.total_pages ?? 1;
+      const remainingPages = totalPages > 1
+        ? await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) => apiRequest<ManagedProduct[]>(`/products?per_page=50&page=${index + 2}`)))
+        : [];
+      if (active) setProducts([firstPage, ...remainingPages].flatMap(response => response.data));
+    }
+    loadProducts().catch(() => { if (active) setFailed(true); });
+    return () => { active = false; };
+  }, []);
   const lineCounts = useMemo(() => Object.fromEntries(catalogLines.map(line => [line.slug, (products ?? []).filter(product => productMatchesLine(product, line.terms)).length])), [products]);
   const subcategoryCounts = useMemo(() => Object.fromEntries(starDeltaSubcategories.map(category => [category.slug, (products ?? []).filter(product => productMatchesLine(product, catalogLines[1].terms) && productMatchesLine(product, category.terms)).length])), [products]);
   const visibleProducts = useMemo(() => {

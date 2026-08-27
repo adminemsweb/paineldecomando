@@ -52,15 +52,8 @@ final class AuthService
         $email = strtolower(trim((string)$data['email']));
         $user = $this->repository->findByEmail($email);
         $now = new DateTimeImmutable();
-        if ($user && $user['locked_until'] && new DateTimeImmutable((string)$user['locked_until']) > $now) {
-            throw new AuthException('Muitas tentativas. Aguarde 15 minutos e tente novamente.', 429);
-        }
         $passwordValid = password_verify((string)$data['password'], $user ? (string)$user['password_hash'] : '$2y$10$wH/G67Q0i5YhMtz0PkVJWe1vUa9j0A3XxO2e0pLEmArMZG6huQuvu');
         if (!$user || !$passwordValid) {
-            if ($user) {
-                $attempts = (int)$user['failed_login_attempts'] + 1;
-                $this->repository->updateFailedLogin((int)$user['id'], $attempts >= 5 ? 0 : $attempts, $attempts >= 5 ? $now->modify('+15 minutes')->format('Y-m-d H:i:s') : null, $now->format('Y-m-d H:i:s'));
-            }
             throw new AuthException('E-mail ou senha incorretos.', 401);
         }
         if ((string)$user['status'] !== 'active' || !$this->repository->isCustomer((int)$user['id'])) throw new AuthException('Esta conta não possui acesso à área de clientes.', 403);
@@ -79,15 +72,8 @@ final class AuthService
         $email = strtolower(trim((string)$data['email']));
         $user = $this->repository->findByEmail($email);
         $now = new DateTimeImmutable();
-        if ($user && $user['locked_until'] && new DateTimeImmutable((string)$user['locked_until']) > $now) {
-            throw new AuthException('Muitas tentativas. Aguarde 15 minutos e tente novamente.', 429);
-        }
         $passwordValid = password_verify((string)$data['password'], $user ? (string)$user['password_hash'] : '$2y$10$wH/G67Q0i5YhMtz0PkVJWe1vUa9j0A3XxO2e0pLEmArMZG6huQuvu');
         if (!$user || !$passwordValid) {
-            if ($user) {
-                $attempts = (int)$user['failed_login_attempts'] + 1;
-                $this->repository->updateFailedLogin((int)$user['id'], $attempts >= 5 ? 0 : $attempts, $attempts >= 5 ? $now->modify('+15 minutes')->format('Y-m-d H:i:s') : null, $now->format('Y-m-d H:i:s'));
-            }
             throw new AuthException('E-mail ou senha incorretos.', 401);
         }
         if ((string)$user['status'] !== 'active' || !$this->repository->isAdmin((int)$user['id'])) throw new AuthException('Esta conta não possui acesso administrativo.', 403);

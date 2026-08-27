@@ -7,6 +7,7 @@ use App\Config\Env;
 use App\Core\Logger;
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\RequestContext;
 use App\Exceptions\AuthException;
 use App\Middleware\RateLimiter;
 use App\Services\AuthService;
@@ -38,7 +39,9 @@ final class AuthController
     public function login(Request $request): never
     {
         RateLimiter::enforce('auth-customer-login', 20, 900);
+        RateLimiter::enforce('auth-customer-login-global', 300, 900, 'global', true);
         $data = $request->body();
+        RateLimiter::enforce('auth-customer-login-account', 5, 900, RequestContext::clientIp() . '|' . $this->accountId($data));
         $errors = AuthValidator::login($data);
         if ($errors) Response::error('Revise os dados de acesso.', 422, $errors);
         try {
@@ -55,7 +58,9 @@ final class AuthController
     public function adminLogin(Request $request): never
     {
         RateLimiter::enforce('auth-admin-login', 10, 900);
+        RateLimiter::enforce('auth-admin-login-global', 60, 900, 'global', true);
         $data = $request->body();
+        RateLimiter::enforce('auth-admin-login-account', 5, 900, RequestContext::clientIp() . '|' . $this->accountId($data));
         $errors = AuthValidator::login($data);
         if ($errors) Response::error('Revise os dados de acesso.', 422, $errors);
         try {

@@ -44,6 +44,8 @@ php backend/tests/run.php
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 ```
 
+Nesse modo, o frontend fica restrito a `127.0.0.1:${FRONTEND_HTTP_PORT:-8080}`. O proxy HTTPS instalado no mesmo host deve encaminhar para essa porta; não publique a porta de origem diretamente na Internet.
+
 No Swarm, crie o segredo SMTP sem gravá-lo no repositório:
 
 ```bash

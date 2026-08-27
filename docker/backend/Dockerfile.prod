@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libcurl4-openss
 COPY docker/backend/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/backend/entrypoint.prod.sh /usr/local/bin/paineldecomando-entrypoint
 COPY backend/ /var/www/html/
-RUN mkdir -p storage/logs public/uploads \
+RUN mkdir -p storage/logs storage/runtime/rate-limits storage/runtime/cache storage/runtime/external-guards public/uploads \
     && chown -R www-data:www-data storage public/uploads \
     && sed -i 's/\r$//' /usr/local/bin/paineldecomando-entrypoint \
     && chmod 755 /usr/local/bin/paineldecomando-entrypoint

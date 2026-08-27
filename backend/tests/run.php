@@ -135,4 +135,123 @@ $test('RateLimiter bloqueia excesso sem armazenar IP em claro', static function 
     }
 });
 
+$test('LeadValidator limita tamanhos, tipos e faixas', static function () use ($assert): void {
+    $errors = LeadValidator::validate(['name'=>str_repeat('a',151),'email'=>'maria@example.com','phone'=>['1199'],'description'=>'Painel','state'=>'Sao Paulo','quantity'=>1001,'desired_deadline'=>'2026-02-30','consent'=>true]);
+    $assert(isset($errors['name'], $errors['phone'], $errors['state'], $errors['quantity'], $errors['desired_deadline']), 'Payload abusivo não foi rejeitado por completo.');
+});
+
+$test('LeadService reutiliza protocolo de submissão duplicada recente', static function () use ($assert): void {
+    $pdo = new PDO('sqlite::memory:', options:[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo->sqliteCreateFunction('NOW', static fn(): string => date('Y-m-d H:i:s'));
+    $pdo->exec('CREATE TABLE leads (id INTEGER PRIMARY KEY AUTOINCREMENT,protocol TEXT UNIQUE,name TEXT,company TEXT,cnpj TEXT,email TEXT,phone TEXT,whatsapp TEXT,city TEXT,state TEXT,segment_id INTEGER,product_id INTEGER,voltage TEXT,power TEXT,quantity INTEGER,desired_deadline TEXT,description TEXT,lgpd_consent INTEGER,status TEXT,source TEXT,created_at TEXT,updated_at TEXT,deleted_at TEXT)');
+    $service = new \App\Services\LeadService($pdo);
+    $payload = ['name'=>'Maria','email'=>'maria@example.com','phone'=>'11999999999','description'=>'Painel 220 V','consent'=>true];
+    $first = $service->create($payload);
+    $second = $service->create($payload);
+    $assert($first['protocol'] === $second['protocol'], 'A duplicata criou outro protocolo.');
+    $assert((int)$pdo->query('SELECT COUNT(*) FROM leads')->fetchColumn() === 1, 'A duplicata criou outra linha.');
+});
+
+$test('RequestContext confia em X-Forwarded-For apenas vindo de proxy autorizado', static function () use ($assert): void {
+    $originalServer = $_SERVER;
+    $_ENV['TRUSTED_PROXY_CIDRS'] = '10.0.0.0/8,172.16.0.0/12';
+    try {
+        $_SERVER['REMOTE_ADDR'] = '172.18.0.4';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.25, 10.0.0.8';
+        $assert(\App\Core\RequestContext::clientIp() === '198.51.100.25', 'O IP original não foi resolvido pela cadeia confiável.');
+        $_SERVER['REMOTE_ADDR'] = '203.0.113.9';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.99';
+        $assert(\App\Core\RequestContext::clientIp() === '203.0.113.9', 'Um cliente direto conseguiu forjar X-Forwarded-For.');
+    } finally {
+        $_SERVER = $originalServer;
+        unset($_ENV['TRUSTED_PROXY_CIDRS']);
+    }
+});
+
+$test('RateLimiter separa visitantes resolvidos atrás do proxy', static function () use ($assert): void {
+    $directory = sys_get_temp_dir() . '/painel-rate-limit-' . bin2hex(random_bytes(6));
+    $originalServer = $_SERVER;
+    $_ENV['RATE_LIMIT_PATH'] = $directory;
+    $_ENV['TRUSTED_PROXY_CIDRS'] = '172.16.0.0/12';
+    try {
+        $_SERVER['REMOTE_ADDR'] = '172.18.0.4';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.1';
+        $assert(RateLimiter::attempt('proxy-test', 1, 60)['allowed']);
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.2';
+        $assert(RateLimiter::attempt('proxy-test', 1, 60)['allowed'], 'Visitantes diferentes compartilharam o mesmo bucket.');
+    } finally {
+        foreach (glob($directory . '/*.json') ?: [] as $file) unlink($file);
+        if (is_dir($directory)) rmdir($directory);
+        $_SERVER = $originalServer;
+        unset($_ENV['RATE_LIMIT_PATH'], $_ENV['TRUSTED_PROXY_CIDRS']);
+    }
+});
+
+$test('FileCache evita repetir trabalho e guard limita concorrência', static function () use ($assert): void {
+    $root = sys_get_temp_dir() . '/painel-runtime-' . bin2hex(random_bytes(6));
+    $_ENV['CACHE_PATH'] = $root . '/cache';
+    $_ENV['EXTERNAL_GUARD_PATH'] = $root . '/guards';
+    $_ENV['EXTERNAL_MAX_CONCURRENCY'] = '1';
+    try {
+        $calls = 0;
+        $first = \App\Support\FileCache::remember('test', 'key', 60, static function () use (&$calls): array { $calls++; return ['ok'=>true]; });
+        $second = \App\Support\FileCache::remember('test', 'key', 60, static function () use (&$calls): array { $calls++; return ['ok'=>false]; });
+        $assert($first === $second && $calls === 1, 'O cache não reutilizou a resposta válida.');
+        $blocked = false;
+        \App\Support\ExternalRequestGuard::run(static function () use (&$blocked): void {
+            try { \App\Support\ExternalRequestGuard::run(static fn() => null); }
+            catch (\App\Exceptions\ServiceUnavailableException) { $blocked = true; }
+        });
+        $assert($blocked, 'O limite global de concorrência não bloqueou a segunda operação.');
+    } finally {
+        $iterator = is_dir($root) ? new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST) : [];
+        foreach ($iterator as $item) $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
+        if (is_dir($root)) rmdir($root);
+        unset($_ENV['CACHE_PATH'], $_ENV['EXTERNAL_GUARD_PATH'], $_ENV['EXTERNAL_MAX_CONCURRENCY']);
+    }
+});
+
+$test('RateLimiter falha fechado nos endpoints públicos protegidos', static function () use ($assert): void {
+    $path = tempnam(sys_get_temp_dir(), 'painel-rate-file-');
+    if ($path === false) throw new RuntimeException('Não foi possível criar o caminho de teste.');
+    $_ENV['RATE_LIMIT_PATH'] = $path;
+    try {
+        $result = RateLimiter::attempt('public-test', 1, 60, '198.51.100.4', true);
+        $assert(!$result['allowed'] && $result['retry_after'] > 0, 'A falha de armazenamento liberou um endpoint público.');
+    } finally {
+        unset($_ENV['RATE_LIMIT_PATH']);
+        unlink($path);
+    }
+});
+
+$test('RateLimiter global limita tentativas distribuídas', static function () use ($assert): void {
+    $directory = sys_get_temp_dir() . '/painel-rate-global-' . bin2hex(random_bytes(6));
+    $_ENV['RATE_LIMIT_PATH'] = $directory;
+    try {
+        $first = RateLimiter::attempt('auth-global-test', 1, 60, 'global', true);
+        $second = RateLimiter::attempt('auth-global-test', 1, 60, 'global', true);
+        $assert($first['allowed'] && !$second['allowed'], 'O teto global não bloqueou tentativas distribuídas.');
+    } finally {
+        foreach (glob($directory . '/*.json') ?: [] as $file) unlink($file);
+        if (is_dir($directory)) rmdir($directory);
+        unset($_ENV['RATE_LIMIT_PATH']);
+    }
+});
+
+$test('Falhas repetidas não bloqueiam cliente nem administrador', static function () use ($assert): void {
+    $pdo = new PDO('sqlite::memory:', options:[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo->exec("CREATE TABLE roles (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,slug TEXT UNIQUE,status TEXT); CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT UNIQUE,password_hash TEXT,status TEXT,failed_login_attempts INTEGER DEFAULT 0,locked_until TEXT,last_login_at TEXT,created_at TEXT,updated_at TEXT,deleted_at TEXT); CREATE TABLE user_roles (user_id INTEGER,role_id INTEGER,created_at TEXT,PRIMARY KEY(user_id,role_id)); CREATE TABLE user_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER,token_hash TEXT UNIQUE,expires_at TEXT,last_used_at TEXT,user_agent TEXT,created_at TEXT,revoked_at TEXT); CREATE TABLE customer_profiles (user_id INTEGER PRIMARY KEY,company_name TEXT,phone TEXT,lgpd_consent_at TEXT,created_at TEXT,updated_at TEXT); CREATE TABLE customer_addresses (id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER,label TEXT,recipient_name TEXT,postal_code TEXT,street TEXT,number TEXT,complement TEXT,district TEXT,city TEXT,state TEXT,is_default INTEGER,created_at TEXT,updated_at TEXT)");
+    $now = date('Y-m-d H:i:s');
+    $pdo->exec("INSERT INTO roles (id,name,slug,status) VALUES (1,'Cliente','customer','active'),(2,'Admin','admin','active')");
+    $insert = $pdo->prepare('INSERT INTO users (id,name,email,password_hash,status,failed_login_attempts,locked_until,created_at,updated_at) VALUES (:id,:name,:email,:hash,\'active\',0,NULL,:created,:updated)');
+    $insert->execute(['id'=>1,'name'=>'Cliente','email'=>'cliente@example.com','hash'=>password_hash('Senha123', PASSWORD_DEFAULT),'created'=>$now,'updated'=>$now]);
+    $insert->execute(['id'=>2,'name'=>'Admin','email'=>'admin@example.com','hash'=>password_hash('Admin123', PASSWORD_DEFAULT),'created'=>$now,'updated'=>$now]);
+    $pdo->exec("INSERT INTO user_roles (user_id,role_id,created_at) VALUES (1,1,'{$now}'),(2,2,'{$now}'); INSERT INTO customer_profiles (user_id,company_name,phone,lgpd_consent_at,created_at,updated_at) VALUES (1,NULL,'11999999999','{$now}','{$now}','{$now}')");
+    $service = new AuthService(new AuthRepository($pdo));
+    for ($attempt = 0; $attempt < 6; $attempt++) { try { $service->login(['email'=>'cliente@example.com','password'=>'Errada']); } catch (\App\Exceptions\AuthException) {} }
+    $assert($service->login(['email'=>'cliente@example.com','password'=>'Senha123'])['user']['email'] === 'cliente@example.com', 'O cliente permaneceu bloqueado.');
+    for ($attempt = 0; $attempt < 6; $attempt++) { try { $service->login(['email'=>'admin@example.com','password'=>'Errada']); } catch (\App\Exceptions\AuthException) {} }
+    $assert($service->adminLogin(['email'=>'admin@example.com','password'=>'Admin123'])['user']['role'] === 'admin', 'Falhas no login de cliente bloquearam o administrador.');
+});
+
 exit($failures === [] ? 0 : 1);

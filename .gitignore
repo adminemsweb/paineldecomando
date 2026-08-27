@@ -1,5 +1,7 @@
 node_modules/
 frontend/dist/
+frontend/reports/
+frontend/.lighthouseci/
 backend/vendor/
 *.log
 .env

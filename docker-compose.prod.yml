@@ -17,7 +17,7 @@ services:
         VITE_COMPANY_ADDRESS: ${VITE_COMPANY_ADDRESS}
         VITE_COMPANY_HOURS: ${VITE_COMPANY_HOURS}
         VITE_COMPANY_DELIVERY_NOTICE: ${VITE_COMPANY_DELIVERY_NOTICE}
-    ports: ["80:80"]
+    ports: ["127.0.0.1:${FRONTEND_HTTP_PORT:-8080}:80"]
     restart: unless-stopped
     depends_on: [api]
     logging: { options: { max-size: "10m", max-file: "5" } }
@@ -31,10 +31,17 @@ services:
       DB_HOST: db
       DB_PORT: 3306
       LOG_PATH: /var/www/html/storage/logs
+      RATE_LIMIT_PATH: /var/www/html/storage/runtime/rate-limits
+      CACHE_PATH: /var/www/html/storage/runtime/cache
+      EXTERNAL_GUARD_PATH: /var/www/html/storage/runtime/external-guards
+      EXTERNAL_MAX_CONCURRENCY: 6
+      TRUSTED_PROXY_CIDRS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
     restart: unless-stopped
     depends_on:
       db: { condition: service_healthy }
-    volumes: ["api_logs:/var/www/html/storage/logs"]
+    volumes:
+      - api_logs:/var/www/html/storage/logs
+      - api_runtime:/var/www/html/storage/runtime
     logging: { options: { max-size: "10m", max-file: "5" } }
 
   db:
@@ -58,3 +65,4 @@ services:
 volumes:
   database_prod:
   api_logs:
+  api_runtime:
