@@ -6,6 +6,14 @@ import HomePage from './HomePage';
 afterEach(cleanup);
 
 describe('HomePage testimonials', () => {
+  it('destaca caminhos comerciais sem repetir o catálogo visualmente', () => {
+    render(<MemoryRouter><HomePage/></MemoryRouter>);
+
+    expect(screen.getByRole('heading', { name: 'Comece pela necessidade da sua operação.' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /encontrar meu painel/i })).toHaveAttribute('href', '/painel-de-comando-eletrico');
+    expect(screen.getByRole('link', { name: /atendimento em Sorocaba/i })).toHaveAttribute('href', '/painel-de-comando-sorocaba');
+  });
+
   it('mostra painéis reais com preço e link para a página do produto', () => {
     render(<MemoryRouter><HomePage/></MemoryRouter>);
 

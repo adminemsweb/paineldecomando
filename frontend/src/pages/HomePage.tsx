@@ -12,11 +12,11 @@ const popularProducts = [
 ];
 
 const commercialSolutions = [
-  { code: '01', title: 'Painel de comando elétrico', detail: 'Controle e proteção para motores e máquinas', to: '/painel-de-comando-eletrico' },
-  { code: '02', title: 'Painéis elétricos sob medida', detail: 'Configuração definida para sua aplicação', to: '/paineis-eletricos-sob-medida' },
-  { code: '03', title: 'Montagem de painéis industriais', detail: 'Da especificação à verificação funcional', to: '/montagem-de-paineis-eletricos-industriais' },
-  { code: '04', title: 'Atendimento em Sorocaba', detail: 'Orçamento local e entrega para todo o Brasil', to: '/painel-de-comando-sorocaba' },
-];
+  { code: '01', title: 'Painel de comando elétrico', detail: 'Entenda as opções de controle e proteção para motores, bombas e máquinas.', to: '/painel-de-comando-eletrico', icon: 'clipboard' },
+  { code: '02', title: 'Painéis elétricos sob medida', detail: 'Uma configuração desenvolvida a partir dos dados da sua aplicação.', to: '/paineis-eletricos-sob-medida', icon: 'partnership' },
+  { code: '03', title: 'Montagem de painéis industriais', detail: 'Do levantamento técnico à organização e verificação funcional.', to: '/montagem-de-paineis-eletricos-industriais', icon: 'shield' },
+  { code: '04', title: 'Atendimento em Sorocaba', detail: 'Compra assistida e entrega de painéis para todo o Brasil.', to: '/painel-de-comando-sorocaba', icon: 'pin' },
+] as const;
 
 const products = [
   { category: 'Bomba de incêndio', name: 'Painel Bomba de Incêndio 10CV 220V', description: 'Acionamento estrela-triângulo seguro para bombas de incêndio trifásicas.', image: '/images/painel-bomba-incendio-10cv-220v-vermelho.png', to: '/produtos/painel-estrela-triangulo-bomba-incendio-10cv-220v', price: 'R$ 2.150,00', installment: '3x de R$ 716,67', badge: 'Em destaque' },
@@ -129,14 +129,26 @@ export default function HomePage() {
 
     <aside className="storefront-benefits" aria-label="Benefícios da compra"><div className="container storefront-benefits__inner"><div><Icon name="truck" size={38}/><p><strong>Frete Grátis</strong><span>para o Sudeste</span></p></div><div><Icon name="discount" size={38}/><p><strong>Pague com Pix</strong><span>Desconto de 5% à vista</span></p></div><div><Icon name="creditCard" size={38}/><p><strong>Pague com Cartão</strong><span>Em até 3x sem juros</span></p></div><div><Icon name="shield" size={38}/><p><strong>Segurança</strong><span>Seus dados protegidos</span></p></div></div></aside>
 
-    <section className="shop-categories" aria-labelledby="solutions-title">
+    <section className="shop-solutions" aria-labelledby="solutions-title">
       <div className="container">
-        <header className="shop-section-heading"><div><span>Soluções comerciais</span><h2 id="solutions-title">Encontre o painel pelo que você precisa.</h2></div><p>Conteúdo direto para comparar opções, preparar os dados técnicos e solicitar um orçamento.</p></header>
-        <div className="shop-category-grid shop-category-grid--popular">{commercialSolutions.map(solution => <Link to={solution.to} key={solution.code} className="shop-category-card"><span>{solution.code}</span><div><strong>{solution.title}</strong><small>{solution.detail}</small></div><b aria-hidden="true">→</b></Link>)}</div>
+        <header className="shop-solutions__heading"><div><span>Soluções comerciais</span><h2 id="solutions-title">Comece pela necessidade da sua operação.</h2></div><p>Compare as opções, prepare os dados técnicos e avance para um orçamento mais preciso.</p></header>
+        <div className="shop-solutions__grid">
+          <Link className="shop-solution-featured" to={commercialSolutions[0].to}>
+            <span className="shop-solution-featured__number">01</span>
+            <div className="shop-solution-featured__icon"><Icon name="clipboard" size={28}/></div>
+            <div><small>Guia principal</small><h3>{commercialSolutions[0].title}</h3><p>{commercialSolutions[0].detail}</p></div>
+            <strong>Encontrar meu painel <Icon name="arrow" size={18}/></strong>
+          </Link>
+          {commercialSolutions.slice(1).map(solution => <Link to={solution.to} key={solution.code} className="shop-solution-shortcut">
+            <span><Icon name={solution.icon} size={23}/></span>
+            <div><small>{solution.code}</small><h3>{solution.title}</h3><p>{solution.detail}</p></div>
+            <Icon name="arrow" size={18}/>
+          </Link>)}
+        </div>
       </div>
     </section>
 
-    <section className="shop-categories" aria-labelledby="popular-title">
+    <section className="shop-categories shop-categories--popular" aria-labelledby="popular-title">
       <div className="container">
         <header className="shop-section-heading"><div><span>Mais buscados</span><h2 id="popular-title">Produtos mais procurados.</h2></div><Link to="/produtos">Ver todo o catálogo <span aria-hidden="true">→</span></Link></header>
         <div className="shop-category-grid shop-category-grid--popular">{popularProducts.map(product => <Link to={product.to} key={product.code} className="shop-category-card"><span>{product.code}</span><div><strong>{product.title}</strong><small>{product.detail}</small></div><b aria-hidden="true">→</b></Link>)}</div>
