@@ -161,6 +161,11 @@ h1,h2,h3 { margin:0; line-height:1.05; letter-spacing:-.045em; }
 .storefront-hero--gray .storefront-hero__badge,.storefront-hero--navy .storefront-hero__badge,.storefront-hero--red .storefront-hero__badge { color:var(--ink); background:var(--orange); border-color:#ffdc42; }
 .storefront-hero--gray .storefront-hero__badge small,.storefront-hero--navy .storefront-hero__badge small,.storefront-hero--red .storefront-hero__badge small { color:#5a4900; }
 
+@media (min-width:1025px) {
+  .storefront-hero--gray .storefront-hero__content { padding-block:38px; }
+  .storefront-hero--gray .storefront-hero__content h1 { max-width:760px; font-size:clamp(48px,3.65vw,64px); line-height:.96; }
+}
+
 @keyframes heroReveal { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
 @keyframes heroPanelEnter { from { opacity:0; transform:translateX(-42%) scale(.94); } to { opacity:1; transform:translateX(-50%) scale(1); } }
 @keyframes heroPanelFloat { 0%,100% { transform:translateX(-50%) translateY(0); } 50% { transform:translateX(-50%) translateY(-9px); } }
