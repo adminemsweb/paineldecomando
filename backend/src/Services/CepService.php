@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ServiceUnavailableException;
+use App\Support\CurlTlsOptions;
 use App\Support\ExternalRequestGuard;
 use App\Support\FileCache;
 use RuntimeException;
@@ -39,7 +41,7 @@ final class CepService
             }
         }
 
-        if ($data === null && $providerFailures === count($providers)) throw new RuntimeException('Não foi possível consultar esse CEP agora. Tente novamente.');
+        if ($data === null && $providerFailures === count($providers)) throw new ServiceUnavailableException('Não foi possível consultar esse CEP agora. Tente novamente.');
         if ($data === null) throw new RuntimeException('CEP não encontrado.');
 
         $street = trim((string)($data['street'] ?? ''));
@@ -82,7 +84,9 @@ final class CepService
     {
         $handle = curl_init($url);
         if ($handle === false) throw new RuntimeException('Não foi possível iniciar a consulta do CEP.');
-        curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_HTTPHEADER=>['Accept: application/json','User-Agent: PainelDeComando/1.0'],CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>6]);
+        $options = [CURLOPT_RETURNTRANSFER=>true,CURLOPT_HTTPHEADER=>['Accept: application/json','User-Agent: PainelDeComando/1.0'],CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>6];
+        $options += CurlTlsOptions::trustedCertificateOptions();
+        curl_setopt_array($handle, $options);
         $raw = curl_exec($handle);
         $status = (int)curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
         curl_close($handle);

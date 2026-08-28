@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Config\Env;
+use App\Support\CurlTlsOptions;
 use App\Support\ExternalRequestGuard;
 use App\Support\FileCache;
 use RuntimeException;
@@ -81,7 +82,9 @@ final class CorreiosService
         $headers = ['Accept: application/json'];
         if ($token) $headers[] = 'Authorization: Bearer ' . $token;
         if ($body !== null) $headers[] = 'Content-Type: application/json';
-        curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_HTTPHEADER=>$headers,CURLOPT_CONNECTTIMEOUT=>5,CURLOPT_TIMEOUT=>12]);
+        $options = [CURLOPT_RETURNTRANSFER=>true,CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_HTTPHEADER=>$headers,CURLOPT_CONNECTTIMEOUT=>5,CURLOPT_TIMEOUT=>12];
+        $options += CurlTlsOptions::trustedCertificateOptions();
+        curl_setopt_array($handle, $options);
         if ($basic) curl_setopt($handle, CURLOPT_USERPWD, Env::get('CORREIOS_USER') . ':' . Env::get('CORREIOS_API_CODE'));
         if ($body !== null) curl_setopt($handle, CURLOPT_POSTFIELDS, json_encode($body, JSON_THROW_ON_ERROR));
         $raw = curl_exec($handle);

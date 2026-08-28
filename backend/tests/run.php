@@ -13,6 +13,7 @@ use App\Config\Env;
 use App\Middleware\RateLimiter;
 use App\Services\CepService;
 use App\Services\CorreiosService;
+use App\Support\CurlTlsOptions;
 use App\Repositories\AuthRepository;
 use App\Repositories\CategoryRepository;
 use App\Services\AuthService;
@@ -67,6 +68,12 @@ $test('CepService valida CEP antes de consultar o provedor', static function ():
         throw $exception;
     }
     throw new RuntimeException('CEP invalido foi aceito.');
+});
+
+$test('CurlTlsOptions nunca desativa a verificacao TLS', static function () use ($assert): void {
+    $options = CurlTlsOptions::trustedCertificateOptions();
+    $assert(!array_key_exists(CURLOPT_SSL_VERIFYPEER, $options), 'A verificacao do certificado TLS foi alterada.');
+    if (isset($options[CURLOPT_CAINFO])) $assert(is_readable($options[CURLOPT_CAINFO]), 'O arquivo de certificados nao pode ser lido.');
 });
 
 $test('CategoryRepository mantém categorias e subcategorias em hierarquia', static function () use ($assert): void {
