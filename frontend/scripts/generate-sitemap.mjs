@@ -8,7 +8,13 @@ const outputPath = path.join(frontendDir, 'public', 'sitemap.xml');
 const siteUrl = (process.env.VITE_SITE_URL || 'https://paineldecomando.com.br').replace(/\/$/, '');
 const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
 const lastmod = (await stat(catalogPath)).mtime.toISOString().slice(0, 10);
-const staticPaths = ['/', '/empresa', '/produtos', '/servicos', '/segmentos', '/projetos', '/blog', '/contato'];
+const staticPaths = [
+  '/', '/empresa', '/produtos', '/servicos', '/segmentos', '/projetos', '/blog', '/contato',
+  '/painel-de-comando-eletrico',
+  '/paineis-eletricos-sob-medida',
+  '/montagem-de-paineis-eletricos-industriais',
+  '/painel-de-comando-sorocaba',
+];
 const catalogLines = ['estrela-triangulo', 'soft-starter', 'inversor-de-frequencia', 'bomba-de-incendio', 'irrigacao', 'revezamento'];
 const productPaths = catalog.filter(product => product.status === 'published').map(product => `/produtos/${product.slug}`);
 

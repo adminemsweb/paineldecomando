@@ -4,6 +4,7 @@ import { AdminLayout } from '../components/layout/AdminLayout';
 import { PublicLayout } from '../components/layout/PublicLayout';
 import { AccountPage, BuyerPolicyPage, CartPage, CompanyPage, ContactPage, DetailPage, ForgotPasswordPage, LegalPage, ListingPage, NotFoundPage, QuotePage, ResetPasswordPage } from '../pages/PublicPages';
 import { AdminCategoriesPage, AdminDashboardPage, AdminLoginPage, AdminPlaceholderPage, AdminProductsPage } from '../pages/AdminPages';
+import CommercialLandingPage from '../pages/CommercialLandingPage';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const sections = ['Produtos', 'Categorias', 'Segmentos', 'Serviços', 'Projetos', 'Posts', 'Leads', 'Configurações'];
@@ -12,6 +13,10 @@ export function AppRoutes() {
   return <Suspense fallback={<div className="page-loader" role="status">Carregando…</div>}><Routes>
     <Route element={<PublicLayout/>}>
       <Route index element={<HomePage/>}/><Route path="empresa" element={<CompanyPage/>}/>
+      <Route path="painel-de-comando-eletrico" element={<CommercialLandingPage kind="comando"/>}/>
+      <Route path="paineis-eletricos-sob-medida" element={<CommercialLandingPage kind="sob-medida"/>}/>
+      <Route path="montagem-de-paineis-eletricos-industriais" element={<CommercialLandingPage kind="montagem"/>}/>
+      <Route path="painel-de-comando-sorocaba" element={<CommercialLandingPage kind="sorocaba"/>}/>
       <Route path="produtos" element={<ListingPage kind="produtos"/>}/><Route path="produtos/:slug" element={<DetailPage kind="produto"/>}/>
       <Route path="servicos" element={<ListingPage kind="servicos"/>}/><Route path="servicos/:slug" element={<DetailPage kind="serviço"/>}/>
       <Route path="segmentos" element={<ListingPage kind="segmentos"/>}/><Route path="segmentos/:slug" element={<DetailPage kind="segmento"/>}/>

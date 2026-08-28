@@ -11,6 +11,13 @@ const popularProducts = [
   { code: '04', title: 'Painel com Soft Starter', detail: 'Partidas e paradas controladas', to: '/produtos?linha=soft-starter' },
 ];
 
+const commercialSolutions = [
+  { code: '01', title: 'Painel de comando elétrico', detail: 'Controle e proteção para motores e máquinas', to: '/painel-de-comando-eletrico' },
+  { code: '02', title: 'Painéis elétricos sob medida', detail: 'Configuração definida para sua aplicação', to: '/paineis-eletricos-sob-medida' },
+  { code: '03', title: 'Montagem de painéis industriais', detail: 'Da especificação à verificação funcional', to: '/montagem-de-paineis-eletricos-industriais' },
+  { code: '04', title: 'Atendimento em Sorocaba', detail: 'Orçamento local e entrega para todo o Brasil', to: '/painel-de-comando-sorocaba' },
+];
+
 const products = [
   { category: 'Bomba de incêndio', name: 'Painel Bomba de Incêndio 10CV 220V', description: 'Acionamento estrela-triângulo seguro para bombas de incêndio trifásicas.', image: '/images/painel-bomba-incendio-10cv-220v-vermelho.png', to: '/produtos/painel-estrela-triangulo-bomba-incendio-10cv-220v', price: 'R$ 2.150,00', installment: '3x de R$ 716,67', badge: 'Em destaque' },
   { category: 'Acionamento', name: 'Painel Soft Starter SSW07 45A 30CV 380V', description: 'Partida suave e proteção para motores trifásicos de até 30 CV.', image: '/images/painel-soft-starter-com-logo.png', to: '/produtos/painel-soft-starter-ssw07-45a-30cv-380v', price: 'R$ 6.247,50', installment: '3x de R$ 2.082,50' },
@@ -48,13 +55,13 @@ const heroSlides = [
   {
     theme: 'gray',
     eyebrow: 'Painéis e automação industrial',
-    title: 'O painel certo para sua operação industrial.',
-    description: 'Compre painéis para partida, acionamento e automação com orientação técnica e configuração dimensionada para sua aplicação.',
+    title: 'Painéis de comando elétrico para motores, bombas e máquinas.',
+    description: 'Compare modelos ou solicite um painel elétrico sob medida para partida, proteção e automação industrial, com atendimento em Sorocaba e entrega para todo o Brasil.',
     tags: ['Partida de motores', 'Proteção elétrica', 'Automação industrial'],
     image: '/images/logopc.png',
     imageAlt: 'Painel elétrico industrial em gabinete fechado',
     badge: 'Painel Estrela-Triângulo',
-    to: '/produtos/painel-estrela-triangulo',
+    to: '/painel-de-comando-eletrico',
   },
   {
     theme: 'yellow',
@@ -121,6 +128,13 @@ export default function HomePage() {
     </section>
 
     <aside className="storefront-benefits" aria-label="Benefícios da compra"><div className="container storefront-benefits__inner"><div><Icon name="truck" size={38}/><p><strong>Frete Grátis</strong><span>para o Sudeste</span></p></div><div><Icon name="discount" size={38}/><p><strong>Pague com Pix</strong><span>Desconto de 5% à vista</span></p></div><div><Icon name="creditCard" size={38}/><p><strong>Pague com Cartão</strong><span>Em até 3x sem juros</span></p></div><div><Icon name="shield" size={38}/><p><strong>Segurança</strong><span>Seus dados protegidos</span></p></div></div></aside>
+
+    <section className="shop-categories" aria-labelledby="solutions-title">
+      <div className="container">
+        <header className="shop-section-heading"><div><span>Soluções comerciais</span><h2 id="solutions-title">Encontre o painel pelo que você precisa.</h2></div><p>Conteúdo direto para comparar opções, preparar os dados técnicos e solicitar um orçamento.</p></header>
+        <div className="shop-category-grid shop-category-grid--popular">{commercialSolutions.map(solution => <Link to={solution.to} key={solution.code} className="shop-category-card"><span>{solution.code}</span><div><strong>{solution.title}</strong><small>{solution.detail}</small></div><b aria-hidden="true">→</b></Link>)}</div>
+      </div>
+    </section>
 
     <section className="shop-categories" aria-labelledby="popular-title">
       <div className="container">

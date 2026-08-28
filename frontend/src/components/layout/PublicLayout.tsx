@@ -465,6 +465,8 @@ export function PublicLayout() {
           <section className="footer__column">
             <h3>Produtos e suporte</h3>
             <NavLink to="/produtos">Todos os produtos</NavLink>
+            <NavLink to="/painel-de-comando-eletrico">Painel de comando elétrico</NavLink>
+            <NavLink to="/paineis-eletricos-sob-medida">Painéis sob medida</NavLink>
             <NavLink to="/produtos?categoria=paineis">
               Painéis elétricos
             </NavLink>
@@ -497,6 +499,8 @@ export function PublicLayout() {
           <section className="footer__column footer__column--offset">
             <h3>Institucional</h3>
             <NavLink to="/">Sobre o Painel CMD</NavLink>
+            <NavLink to="/montagem-de-paineis-eletricos-industriais">Montagem de painéis</NavLink>
+            <NavLink to="/painel-de-comando-sorocaba">Atendimento em Sorocaba</NavLink>
             <NavLink to="/segmentos">Segmentos atendidos</NavLink>
             <NavLink to="/projetos">Engenharia e projetos</NavLink>
             <NavLink to="/contato">Fale conosco</NavLink>

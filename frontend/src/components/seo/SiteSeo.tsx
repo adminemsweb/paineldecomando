@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { apiRequest } from '../../services/api';
+import { companyConfig } from '../../constants/company';
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL ?? 'https://paineldecomando.com.br').replace(/\/$/, '');
 const DEFAULT_IMAGE = `${SITE_URL}/brand/painel-de-comando-raio-favicon.png`;
@@ -32,7 +33,7 @@ type SeoState = {
 const routeCopy: Record<string, Pick<SeoState, 'title' | 'description'>> = {
   '/': {
     title: 'Painéis de Comando Elétrico e Automação Industrial | Painel de Comando',
-    description: 'Painéis elétricos de comando, partida estrela-triângulo, soft starter, inversores de frequência, irrigação e bombas para aplicações industriais.',
+    description: 'Painéis de comando elétrico para motores, bombas, irrigação e máquinas. Compare modelos ou solicite um painel industrial sob medida com entrega para todo o Brasil.',
   },
   '/empresa': {
     title: 'Empresa de Painéis de Comando Elétrico | Painel de Comando',
@@ -62,6 +63,45 @@ const routeCopy: Record<string, Pick<SeoState, 'title' | 'description'>> = {
     title: 'Contato e Orçamento | Painel de Comando',
     description: 'Fale com a equipe da Painel de Comando e solicite orientação comercial ou orçamento para sua aplicação.',
   },
+  '/painel-de-comando-eletrico': {
+    title: 'Painel de Comando Elétrico para Motores e Máquinas',
+    description: 'Painéis de comando elétrico para partida, proteção e controle de motores, bombas, irrigação e máquinas industriais. Veja modelos e solicite orçamento.',
+  },
+  '/paineis-eletricos-sob-medida': {
+    title: 'Painéis Elétricos Industriais Sob Medida | Orçamento',
+    description: 'Solicite painéis elétricos industriais sob medida para máquinas, motores, bombas e automação. Configuração conforme os dados da sua aplicação.',
+  },
+  '/montagem-de-paineis-eletricos-industriais': {
+    title: 'Montagem de Painéis Elétricos Industriais',
+    description: 'Montagem de painéis elétricos industriais para comando, acionamento e proteção, com organização dos componentes e verificação funcional.',
+  },
+  '/painel-de-comando-sorocaba': {
+    title: 'Painel de Comando em Sorocaba | Atendimento e Orçamento',
+    description: 'Painéis de comando elétrico em Sorocaba para indústrias, bombas e irrigação, com compra assistida e entregas para todo o Brasil.',
+  },
+};
+
+const commercialQuestions: Record<string, Array<{ question: string; answer: string }>> = {
+  '/painel-de-comando-eletrico': [
+    { question: 'Como escolher o painel de comando correto?', answer: 'A escolha considera principalmente aplicação, potência do motor, tensão da rede, corrente nominal, quantidade de partidas e forma de acionamento.' },
+    { question: 'O painel já chega pronto para instalação?', answer: 'O produto é preparado para integração à aplicação descrita. A instalação deve ser realizada por profissional habilitado, seguindo o projeto e as normas aplicáveis.' },
+    { question: 'É possível solicitar uma configuração diferente?', answer: 'Sim. Quando um modelo de catálogo não atende ao projeto, é possível solicitar uma análise para configuração sob medida.' },
+  ],
+  '/paineis-eletricos-sob-medida': [
+    { question: 'Quais informações são necessárias para o orçamento?', answer: 'Informe a aplicação, potência e tensão dos motores, quantidade de cargas, forma de acionamento, local de instalação e funções esperadas.' },
+    { question: 'Vocês adaptam um painel já existente?', answer: 'A possibilidade depende do estado, da documentação e do escopo. Envie fotos e dados do painel para uma avaliação inicial.' },
+    { question: 'O orçamento de painel sob medida é imediato?', answer: 'Projetos especiais precisam de análise. O prazo da proposta varia conforme a quantidade de cargas e a complexidade funcional.' },
+  ],
+  '/montagem-de-paineis-eletricos-industriais': [
+    { question: 'Vocês montam painéis a partir de um projeto existente?', answer: 'Sim, o projeto pode ser analisado para verificar escopo, documentação, componentes e condições de fornecimento.' },
+    { question: 'Quais tipos de painéis são montados?', answer: 'O catálogo inclui partidas de motores, soft starters, inversores de frequência, bombas, irrigação e revezamento, além de configurações especiais sob análise.' },
+    { question: 'A instalação em campo está incluída?', answer: 'As condições de cada fornecimento são apresentadas na proposta. A instalação elétrica deve sempre ser executada por profissionais habilitados.' },
+  ],
+  '/painel-de-comando-sorocaba': [
+    { question: 'Vocês atendem somente Sorocaba?', answer: 'Não. As entregas são realizadas em território brasileiro e o atendimento comercial também pode ser feito por telefone, e-mail e WhatsApp.' },
+    { question: 'Posso solicitar orçamento pelo WhatsApp?', answer: 'Sim. Envie os dados do equipamento e informe potência, tensão, aplicação e cidade.' },
+    { question: 'Existe painel pronto para compra?', answer: 'Sim. O catálogo apresenta modelos com características e preços. Projetos que exigem alterações seguem para cotação técnica.' },
+  ],
 };
 
 const catalogCopy: Record<string, Pick<SeoState, 'title' | 'description'>> = {
@@ -135,6 +175,28 @@ function baseSeo(pathname: string, search: string): SeoState {
       canonical += `?linha=${encodeURIComponent(line)}`;
     }
   }
+  const questions = commercialQuestions[pathname];
+  const commercialStructuredData = questions ? {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Service',
+        name: copy.title,
+        description: copy.description,
+        url: canonical,
+        areaServed: { '@type': 'Country', name: 'Brasil' },
+        provider: { '@type': 'Organization', name: 'Painel de Comando', url: `${SITE_URL}/` },
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: questions.map(item => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      },
+    ],
+  } : undefined;
   return {
     ...copy,
     canonical,
@@ -146,8 +208,26 @@ function baseSeo(pathname: string, search: string): SeoState {
           '@type': 'Organization',
           '@id': `${SITE_URL}/#organization`,
           name: 'Painel de Comando',
+          legalName: companyConfig.legalName,
           url: `${SITE_URL}/`,
           logo: `${SITE_URL}/brand/painel-de-comando-raio-favicon.png`,
+          email: companyConfig.email,
+          telephone: companyConfig.phone,
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'Rua Cabreúva',
+            addressLocality: 'Sorocaba',
+            addressRegion: 'SP',
+            postalCode: '18085-340',
+            addressCountry: 'BR',
+          },
+          contactPoint: {
+            '@type': 'ContactPoint',
+            telephone: companyConfig.phone,
+            contactType: 'sales',
+            areaServed: 'BR',
+            availableLanguage: 'Portuguese',
+          },
         },
         {
           '@type': 'WebSite',
@@ -158,7 +238,7 @@ function baseSeo(pathname: string, search: string): SeoState {
           publisher: { '@id': `${SITE_URL}/#organization` },
         },
       ],
-    } : undefined,
+    } : commercialStructuredData,
   };
 }
 

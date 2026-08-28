@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-sitemap.mjs && tsc -b && vite build && node scripts/prerender-seo.mjs",
-    "build:prod": "node scripts/check-production.mjs && node scripts/generate-sitemap.mjs && tsc -b && vite build --mode production && node scripts/prerender-seo.mjs",
+    "build": "node scripts/generate-sitemap.mjs && node scripts/generate-merchant-feed.mjs && tsc -b && vite build && node scripts/prerender-seo.mjs",
+    "build:prod": "node scripts/check-production.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-merchant-feed.mjs && tsc -b && vite build --mode production && node scripts/prerender-seo.mjs",
     "preview:ci": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "performance": "npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs",
     "performance:build": "npm run build && npm run performance",
