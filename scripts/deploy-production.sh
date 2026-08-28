@@ -30,6 +30,7 @@ docker build \
   -f docker/frontend/Dockerfile.prod \
   -t "paineldecomando-frontend:${image_tag}" \
   --build-arg VITE_API_URL=/api/v1 \
+  --build-arg "VITE_GOOGLE_SITE_VERIFICATION=${VITE_GOOGLE_SITE_VERIFICATION:-}" \
   --build-arg "VITE_COMPANY_NAME=Painel de Comando" \
   --build-arg VITE_COMPANY_SHORT_NAME=PDC \
   --build-arg "VITE_COMPANY_LEGAL_NAME=SMARTFLOW TECNOLOGIA EIRELI" \

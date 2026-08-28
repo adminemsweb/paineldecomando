@@ -18,11 +18,12 @@ if (!defined('BASE_PATH')) {
 $pdo ??= Connection::get();
 $slug = 'painel-irrigacao-soft-starter-ssw07-50cv-220v';
 $product = [
-    'name' => 'Painel para Irrigação com Soft Starter SSW07 50CV 220V',
+    'name' => 'Painel para Irrigação com Soft Starter SSW07 50CV 220V | Painel de Comando',
     'slug' => $slug,
     'summary' => 'Painel para sistemas de irrigação com partida suave, proteção elétrica e operação remota para motores de até 50 CV em 220 V.',
-    'description' => "O Painel para Irrigação com Soft Starter SSW07 50CV 220V foi projetado para sistemas de irrigação, oferecendo controle e proteção eficientes para motores de até 50 CV em redes de 220 V. A partida e a parada suaves ajudam a prolongar a vida útil do motor e a reduzir picos de corrente. A interface homem-máquina remota e os sinaleiros facilitam a operação e a identificação do estado do sistema.\n\nO conjunto conta com disjuntor geral em caixa moldada, seccionadora na porta, proteção do circuito de comando, botão de emergência e bornes para acionamento remoto por contato seco. A caixa metálica de 80 × 60 × 30 cm oferece construção robusta para aplicações agrícolas e industriais.\n\nATENÇÃO: os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos é realizado por flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com simples aperto manual.\n\nInstalação e uso técnico: este equipamento deve ser instalado e manuseado por profissionais qualificados ou com conhecimento técnico adequado. Isso garante o desempenho do produto e a segurança da aplicação. O suporte pós-venda está disponível para orientações comerciais e de uso geral; dúvidas específicas de instalação devem ser direcionadas a um profissional habilitado da área elétrica.",
+    'description' => "Este painel foi projetado especificamente para sistemas de irrigação, oferecendo controle e proteção eficientes para motores de até 50 CV em redes de 220 V. Equipado com uma Soft Starter SSW07, proporciona partidas e paradas suaves, aumentando a vida útil do motor e reduzindo picos de corrente. A interface homem-máquina (IHM) remota e os sinaleiros facilitam a operação e a identificação do estado do sistema.\n\nO conjunto conta com disjuntor geral em caixa moldada, seccionadora na porta, proteção do circuito de comando, botão de emergência e bornes para acionamento remoto por contato seco. A caixa metálica de 80 × 60 × 30 cm oferece construção robusta para aplicações agrícolas e industriais.\n\nATENÇÃO: os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos é realizado por flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com simples aperto manual.\n\nInstalação e uso técnico: este equipamento deve ser instalado e manuseado por profissionais qualificados ou com conhecimento técnico adequado. Isso garante o pleno desempenho do produto e a segurança da aplicação. O suporte pós-venda está disponível para orientações comerciais e de uso geral; dúvidas técnicas específicas sobre instalação devem ser direcionadas a profissionais habilitados da área elétrica.\n\nAo proporcionar partidas e paradas suaves, proteger contra sobrecargas e facilitar a operação remota, este painel contribui para a eficiência, a segurança e a longevidade do sistema de irrigação.",
     'features' => json_encode([
+        'Marca: Painel de Comando',
         'Aplicação: sistemas de irrigação',
         'Potência máxima do motor: 50 CV',
         'Tensão de operação: 220 V',
@@ -33,7 +34,7 @@ $product = [
         'Interface homem-máquina remota',
         'Sinaleiros: comando ligado, sobrecarga e motor ligado',
         'Botão de parada de emergência',
-        'Soft starter SSW07 para motor de 50 CV em 220 V',
+        'Soft Starter SSW07 para motor de 50 CV em 220 V',
         'Bornes para acionamento remoto por contato seco',
     ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
     'benefits' => json_encode([
@@ -47,7 +48,7 @@ $product = [
     ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
     'components' => json_encode([
         'Caixa metálica 80 × 60 × 30 cm',
-        'Soft starter SSW07',
+        'Soft Starter SSW07 50 CV 220 V',
         'Disjuntor geral em caixa moldada',
         'Seccionadora instalada na porta',
         'Disjuntor do circuito de comando',
@@ -61,8 +62,8 @@ $product = [
     'protection_rating' => null,
     'featured_image' => '/images/painel-irrigacao-soft-starter-com-logo.png',
     'gallery_images' => '[]',
-    'video_url' => null,
-    'video_urls' => '[]',
+    'video_url' => '/videos/irriguiacao.mp4',
+    'video_urls' => '["/videos/irriguiacao.mp4"]',
     'category_name' => 'Painel para Irrigação',
     'reference_code' => 'PAINEL-IRRI-SSW07-50CV-220V',
     'brand' => 'Painel de Comando',
@@ -77,7 +78,7 @@ $product = [
     'featured' => 0,
     'status' => 'published',
     'seo_title' => 'Painel para Irrigação Soft Starter SSW07 50CV 220V | Painel de Comando',
-    'seo_description' => 'Painel para irrigação com soft starter SSW07, para motores de até 50 CV em 220 V, interface remota e proteção elétrica.',
+    'seo_description' => 'Painel de Comando para irrigação com Soft Starter SSW07, motor de até 50 CV em 220 V, IHM remota e proteção elétrica completa.',
 ];
 
 $fields = array_keys($product);

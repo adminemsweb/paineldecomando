@@ -18,12 +18,12 @@ if (!defined('BASE_PATH')) {
 $pdo = Connection::get();
 $slug = 'painel-inversor-cfw300-1cv-220v-mono';
 $product = [
-    'name' => 'Painel com Inversor CFW300 WEG 1CV 220V Mono | APR',
+    'name' => 'Painel com Inversor CFW300 1CV 220V Mono | Painel de Comando',
     'slug' => $slug,
     'summary' => 'Painel compacto para controle preciso de motores trifásicos de até 1 CV, com entrada monofásica 220 V e saída trifásica 220 V.',
-    'description' => "O Painel com Inversor CFW300 WEG 1CV 220V Mono é a solução ideal para controle de motores trifásicos com alimentação de entrada monofásica. Compacto e eficiente, proporciona controle preciso de velocidade, proteção contra sobrecarga e instalação prática para aplicações industriais que exigem segurança e desempenho.\n\nO conjunto combina alta performance, confiabilidade e facilidade de operação. O potenciômetro permite regular a velocidade do motor, enquanto o botão liga/desliga, a seletora de sentido de giro e a parada de emergência tornam o comando direto e seguro. Os cabos de entrada e saída já acompanham o produto para facilitar sua integração ao sistema.\n\nATENÇÃO: os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos é realizado por flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com simples aperto manual.\n\nInstalação e uso técnico: o equipamento deve ser instalado e manuseado por profissionais qualificados ou com conhecimento técnico adequado. Isso garante o pleno desempenho do produto e a segurança da aplicação. O suporte pós-venda está disponível para orientações comerciais e de uso geral; dúvidas técnicas específicas sobre instalação devem ser direcionadas a profissionais habilitados da área elétrica.",
+    'description' => "O Painel com Inversor CFW300 1CV 220V Mono é a solução ideal para controle de motores trifásicos com alimentação de entrada monofásica. Compacto e eficiente, proporciona controle preciso de velocidade, proteção contra sobrecarga e instalação prática para aplicações industriais que exigem segurança e desempenho.\n\nO conjunto combina alta performance, confiabilidade e facilidade de operação. O potenciômetro permite regular a velocidade do motor, enquanto o botão liga/desliga, a seletora de sentido de giro e a parada de emergência tornam o comando direto e seguro. Os cabos de entrada e saída já acompanham o produto para facilitar sua integração ao sistema.\n\nATENÇÃO: os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos é realizado por flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com simples aperto manual.\n\nInstalação e uso técnico: o equipamento deve ser instalado e manuseado por profissionais qualificados ou com conhecimento técnico adequado. Isso garante o pleno desempenho do produto e a segurança da aplicação. O suporte pós-venda está disponível para orientações comerciais e de uso geral; dúvidas técnicas específicas sobre instalação devem ser direcionadas a profissionais habilitados da área elétrica.",
     'features' => json_encode([
-        'Inversor de frequência CFW300 WEG de 1 CV',
+        'Inversor de frequência CFW300 de 1 CV',
         'Entrada monofásica 220 V e saída trifásica 220 V',
         'Caixa plástica resistente e compacta de 28 × 18 × 19 cm',
         'Potenciômetro de 10 kΩ para ajuste preciso da velocidade',
@@ -45,7 +45,7 @@ $product = [
     ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
     'components' => json_encode([
         'Caixa plástica 28 × 18 × 19 cm',
-        'Inversor de frequência WEG CFW300 de 1 CV',
+        'Inversor de frequência CFW300 de 1 CV',
         'Potenciômetro de 10 kΩ',
         'Botão duplo liga/desliga',
         'Seletora de sentido de giro',
@@ -65,8 +65,8 @@ $product = [
     'video_url' => '/videos/inversorfrequencia.mp4',
     'video_urls' => json_encode(['/videos/inversorfrequencia.mp4'], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
     'category_name' => 'Painel com Inversor de Frequência',
-    'reference_code' => 'PAINEL-CFW300-1CV-220V-APR',
-    'brand' => 'APR',
+    'reference_code' => 'PAINEL-CFW300-1CV-220V',
+    'brand' => 'Painel de Comando',
     'model' => 'Painel com Inversor CFW300',
     'price_cents' => 220500,
     'installments' => 3,
@@ -77,8 +77,8 @@ $product = [
     'warranty_days' => 90,
     'featured' => 0,
     'status' => 'published',
-    'seo_title' => 'Painel com Inversor CFW300 WEG 1CV 220V Mono | APR',
-    'seo_description' => 'Painel com inversor CFW300 WEG de 1 CV, entrada monofásica 220 V, saída trifásica, controle de velocidade e proteção integrada.',
+    'seo_title' => 'Painel com Inversor CFW300 1CV 220V Mono | Painel de Comando',
+    'seo_description' => 'Painel com inversor CFW300 de 1 CV, entrada monofásica 220 V, saída trifásica, controle de velocidade e proteção integrada.',
 ];
 
 $fields = array_keys($product);

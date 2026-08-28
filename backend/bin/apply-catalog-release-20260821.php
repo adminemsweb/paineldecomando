@@ -25,11 +25,11 @@ if ($check->fetchColumn()) {
 
 $scripts = [
     'seed-star-delta-variants.php',
-    'update-apr-product-content.php',
-    'update-apr-product-15cv-380v.php',
-    'update-apr-product-10cv-380v.php',
-    'update-apr-product-10cv-220v.php',
-    'update-apr-product-7-5cv-220v.php',
+    'update-product-content.php',
+    'update-product-15cv-380v.php',
+    'update-product-10cv-380v.php',
+    'update-product-10cv-220v.php',
+    'update-product-7-5cv-220v.php',
     'update-product-7-5cv-380v.php',
     'update-star-delta-order.php',
 ];

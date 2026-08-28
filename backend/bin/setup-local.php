@@ -31,10 +31,6 @@ foreach ($productColumns as $column => $definition) {
 }
 
 $slugMigrations = [
-    'painel-estrela-triangulo-12-5cv-380v-bomba-incendio-weg-k'=>'painel-estrela-triangulo-12-5cv-380v-bomba-incendio',
-    'painel-estrela-triangulo-7-5cv-380v-compressor-weg-k'=>'painel-estrela-triangulo-7-5cv-380v-compressor',
-    'painel-estrela-triangulo-15cv-380v-compressor-weg-k'=>'painel-estrela-triangulo-15cv-380v-compressor-2',
-    'painel-estrela-triangulo-10cv-380v-compressor-weg-k'=>'painel-estrela-triangulo-10cv-380v-compressor',
 ];
 $migrateSlug = $pdo->prepare('UPDATE products SET slug=:new_slug,updated_at=CURRENT_TIMESTAMP WHERE slug=:old_slug AND deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM products existing WHERE existing.slug=:new_slug AND existing.deleted_at IS NULL)');
 foreach ($slugMigrations as $oldSlug => $newSlug) $migrateSlug->execute(['old_slug'=>$oldSlug,'new_slug'=>$newSlug]);
@@ -979,21 +975,6 @@ if (!$findPushButton20_220->fetchColumn()) {
     ]);
 }
 
-$pdo->exec("UPDATE products SET
-    brand=CASE WHEN UPPER(TRIM(brand))='APR' THEN 'Painel de Comando' ELSE REPLACE(brand,'APR','Painel de Comando') END,
-    name=TRIM(REPLACE(REPLACE(REPLACE(name,' WEG K',''),' Weg K',''),'APR','Painel de Comando')),
-    summary=TRIM(REPLACE(REPLACE(REPLACE(REPLACE(summary,'APR Soluções Industriais','Painel de Comando'),' WEG K',''),' Weg K',''),'APR','Painel de Comando')),
-    description=TRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(description,'APR Soluções Industriais','Painel de Comando'),'Painel APR','Painel de Comando'),'painéis APR','painéis Painel de Comando'),' WEG K',''),' Weg K',''),'APR','Painel de Comando')),
-    features=REPLACE(REPLACE(REPLACE(features,'WEG, ',''),' WEG K',''),' Weg K',''),
-    benefits=REPLACE(REPLACE(REPLACE(REPLACE(benefits,'WEG e ',''),'WEG, ',''),' WEG K',''),' Weg K',''),
-    components=REPLACE(REPLACE(REPLACE(REPLACE(components,'WEG e ',''),'WEG, ',''),' WEG K',''),' Weg K',''),
-    reference_code=REPLACE(reference_code,'APR','PAINEL_COMANDO'),
-    model=TRIM(REPLACE(REPLACE(REPLACE(model,' WEG K',''),' Weg K',''),'APR','Painel de Comando')),
-    seo_title=TRIM(REPLACE(REPLACE(REPLACE(seo_title,' WEG K',''),' Weg K',''),'APR','Painel de Comando')),
-    seo_description=TRIM(REPLACE(REPLACE(REPLACE(REPLACE(seo_description,'WEG e ',''),'WEG, ',''),' WEG K',''),'APR','Painel de Comando')),
-    updated_at=CURRENT_TIMESTAMP
-WHERE deleted_at IS NULL");
-
 require __DIR__ . '/upsert-soft-starter-30cv-380v.php';
 require __DIR__ . '/upsert-soft-starter-45a-30cv-380v.php';
 require __DIR__ . '/upsert-soft-starter-61a-40cv-380v.php';
@@ -1001,6 +982,13 @@ require __DIR__ . '/upsert-soft-starter-30a-20cv-380v.php';
 require __DIR__ . '/upsert-irrigation-soft-starter-125cv-220v.php';
 require __DIR__ . '/upsert-irrigation-soft-starter-60cv-220v.php';
 require __DIR__ . '/upsert-irrigation-soft-starter-50cv-220v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-250cv-380v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-150cv-380v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-100cv-380v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-75cv-380v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-50cv-380v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-150cv-220v.php';
+require __DIR__ . '/upsert-irrigation-soft-starter-100cv-220v.php';
 require __DIR__ . '/upsert-soft-starter-85a-30cv-220v.php';
 require __DIR__ . '/upsert-soft-starter-61a-20cv-220v.php';
 require __DIR__ . '/upsert-soft-starter-45a-15cv-220v.php';

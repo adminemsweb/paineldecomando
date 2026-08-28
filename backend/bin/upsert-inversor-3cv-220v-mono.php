@@ -16,12 +16,12 @@ if (!defined('BASE_PATH')) {
 }
 
 $pdo = Connection::get();
-$slug = 'painel-inversor-3cv-220v-mono-apr';
+$slug = 'painel-inversor-3cv-220v-mono';
 $product = [
-    'name' => 'Painel com Inversor 3CV 220V Mono | APR',
+    'name' => 'Painel com Inversor 3CV 220V Mono | Painel de Comando',
     'slug' => $slug,
     'summary' => 'Painel IP65 para controle de motores trifásicos de 0,5 CV a 3 CV, com entrada monofásica, saída trifásica 220 V e IHM remota.',
-    'description' => "O Painel Completo com Inversor de Frequência APR de 3CV é uma excelente opção para quem busca eficiência e segurança no controle de motores trifásicos de 0,5CV até 3CV. Com entrada monofásica e saída trifásica, proporciona controle preciso e confiável, além de operação simples por meio da IHM remota, potenciômetro de 10 kΩ, botão duplo liga/desliga e parada de emergência.\n\nA IHM remota facilita o monitoramento e o ajuste dos parâmetros. O disjuntor bipolar de 16 A oferece proteção contra curtos-circuitos, enquanto a caixa plástica IP65 compacta protege os componentes em diferentes ambientes de instalação.\n\nATENÇÃO: os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos é realizado por flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com simples aperto manual.\n\nInstalação e uso técnico: o equipamento deve ser instalado e manuseado por profissionais qualificados ou com conhecimento técnico adequado. Isso garante o pleno desempenho do produto e a segurança da aplicação. O suporte pós-venda está disponível para orientações comerciais e de uso geral; dúvidas técnicas específicas sobre instalação devem ser direcionadas a profissionais habilitados da área elétrica.\n\nAplicações: controle de velocidade em máquinas industriais, bombas d'água, ventiladores, exaustores, transportadores, esteiras, misturadores e agitadores. Este painel é uma solução robusta, confiável e de fácil operação para diferentes processos industriais.",
+    'description' => "O Painel Completo com Inversor de Frequência Painel de Comando de 3CV é uma excelente opção para quem busca eficiência e segurança no controle de motores trifásicos de 0,5CV até 3CV. Com entrada monofásica e saída trifásica, proporciona controle preciso e confiável, além de operação simples por meio da IHM remota, potenciômetro de 10 kΩ, botão duplo liga/desliga e parada de emergência.\n\nA IHM remota facilita o monitoramento e o ajuste dos parâmetros. O disjuntor bipolar de 16 A oferece proteção contra curtos-circuitos, enquanto a caixa plástica IP65 compacta protege os componentes em diferentes ambientes de instalação.\n\nATENÇÃO: os botões da porta e do quadro de comando são enviados desmontados para evitar avarias durante o transporte. O engate dos contatos é realizado por flanges de encaixe rápido, permitindo montagem e remoção sem ferramentas, com simples aperto manual.\n\nInstalação e uso técnico: o equipamento deve ser instalado e manuseado por profissionais qualificados ou com conhecimento técnico adequado. Isso garante o pleno desempenho do produto e a segurança da aplicação. O suporte pós-venda está disponível para orientações comerciais e de uso geral; dúvidas técnicas específicas sobre instalação devem ser direcionadas a profissionais habilitados da área elétrica.\n\nAplicações: controle de velocidade em máquinas industriais, bombas d'água, ventiladores, exaustores, transportadores, esteiras, misturadores e agitadores. Este painel é uma solução robusta, confiável e de fácil operação para diferentes processos industriais.",
     'features' => json_encode([
         'Entrada monofásica 220 V',
         'Saída trifásica 220 V',
@@ -67,7 +67,7 @@ $product = [
     'video_urls' => json_encode(['/videos/inversor2.mp4'], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
     'category_name' => 'Painel com Inversor de Frequência',
     'reference_code' => 'PAINEL_INVERSOR_3CV_MONO',
-    'brand' => 'APR',
+    'brand' => 'Painel de Comando',
     'model' => 'Painel com Inversor',
     'price_cents' => 209475,
     'installments' => 3,
@@ -78,7 +78,7 @@ $product = [
     'warranty_days' => 365,
     'featured' => 0,
     'status' => 'published',
-    'seo_title' => 'Painel com Inversor 3CV 220V Mono | APR',
+    'seo_title' => 'Painel com Inversor 3CV 220V Mono | Painel de Comando',
     'seo_description' => 'Painel com inversor de 3 CV, entrada monofásica 220 V, saída trifásica, IHM remota, proteção IP65 e parada de emergência.',
 ];
 

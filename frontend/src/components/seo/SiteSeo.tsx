@@ -141,10 +141,23 @@ function baseSeo(pathname: string, search: string): SeoState {
     noindex,
     structuredData: pathname === '/' ? {
       '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'Painel de Comando',
-      url: `${SITE_URL}/`,
-      inLanguage: 'pt-BR',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          '@id': `${SITE_URL}/#organization`,
+          name: 'Painel de Comando',
+          url: `${SITE_URL}/`,
+          logo: `${SITE_URL}/brand/painel-de-comando-raio-favicon.png`,
+        },
+        {
+          '@type': 'WebSite',
+          '@id': `${SITE_URL}/#website`,
+          name: 'Painel de Comando',
+          url: `${SITE_URL}/`,
+          inLanguage: 'pt-BR',
+          publisher: { '@id': `${SITE_URL}/#organization` },
+        },
+      ],
     } : undefined,
   };
 }
