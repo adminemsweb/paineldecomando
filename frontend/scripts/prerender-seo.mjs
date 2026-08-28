@@ -29,12 +29,12 @@ const staticPages = {
 
 const commercialPages = {
   'painel-de-comando-eletrico': {
-    title: 'Painel de Comando Elétrico para Motores e Máquinas',
-    description: 'Painéis de comando elétrico para partida, proteção e controle de motores, bombas, irrigação e máquinas industriais. Veja modelos e solicite orçamento.',
-    heading: 'Painel de comando elétrico para motores e máquinas',
-    intro: 'Encontre painéis de comando elétrico para partida, proteção e controle de motores em aplicações industriais, sistemas de bombeamento e irrigação.',
+    title: 'Painel de Comando Elétrico Industrial | Orçamento',
+    description: 'Painéis de comando elétrico para partida, proteção e automação de bombas, irrigação, máquinas e aplicações industriais. Veja modelos e solicite orçamento.',
+    heading: 'Painel de comando elétrico industrial',
+    intro: 'Encontre painéis de comando elétrico para partida, proteção e automação de bombas, máquinas, sistemas de irrigação e outras aplicações industriais.',
     questions: [
-      ['Como escolher o painel de comando correto?', 'A escolha considera principalmente aplicação, potência do motor, tensão da rede, corrente nominal, quantidade de partidas e forma de acionamento.'],
+      ['Como escolher o painel de comando correto?', 'A escolha considera principalmente a aplicação, a potência da carga, a tensão da rede, a corrente nominal, a quantidade de partidas e a forma de acionamento.'],
       ['O painel já chega pronto para instalação?', 'O produto é preparado para integração à aplicação descrita. A instalação deve ser realizada por profissional habilitado, seguindo o projeto e as normas aplicáveis.'],
       ['É possível solicitar uma configuração diferente?', 'Sim. Quando um modelo de catálogo não atende ao projeto, é possível solicitar uma análise para configuração sob medida.'],
     ],

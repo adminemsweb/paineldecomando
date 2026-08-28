@@ -7,7 +7,7 @@ afterEach(cleanup);
 
 describe('CommercialLandingPage', () => {
   const cases: Array<[CommercialLandingKind, string]> = [
-    ['comando', 'Painel de comando elétrico para motores e máquinas'],
+    ['comando', 'Painel de comando elétrico industrial'],
     ['sob-medida', 'Painéis elétricos industriais sob medida'],
     ['montagem', 'Montagem de painéis elétricos industriais'],
     ['sorocaba', 'Painel de comando em Sorocaba e atendimento para todo o Brasil'],
@@ -24,6 +24,7 @@ describe('CommercialLandingPage', () => {
   it('leva o comprador às principais linhas do catálogo', () => {
     render(<MemoryRouter><CommercialLandingPage kind="comando"/></MemoryRouter>);
 
+    expect(screen.queryByText(/motores/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /painel com soft starter/i })).toHaveAttribute('href', '/produtos?linha=soft-starter');
     expect(screen.getByRole('link', { name: /painel para irrigação/i })).toHaveAttribute('href', '/produtos?linha=irrigacao');
   });

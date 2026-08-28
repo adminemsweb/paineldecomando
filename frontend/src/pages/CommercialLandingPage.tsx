@@ -19,12 +19,12 @@ type LandingContent = {
 const content: Record<CommercialLandingKind, LandingContent> = {
   comando: {
     eyebrow: 'Controle, proteção e acionamento',
-    title: 'Painel de comando elétrico para motores e máquinas',
-    intro: 'Encontre painéis de comando elétrico para partida, proteção e controle de motores em aplicações industriais, sistemas de bombeamento e irrigação.',
+    title: 'Painel de comando elétrico industrial',
+    intro: 'Encontre painéis de comando elétrico para partida, proteção e automação de bombas, máquinas, sistemas de irrigação e outras aplicações industriais.',
     lead: 'Escolha um modelo do catálogo ou solicite uma configuração de acordo com potência, tensão, corrente e forma de acionamento da sua aplicação.',
     benefits: [
-      { title: 'Partida de motores', text: 'Soluções com partida direta, estrela-triângulo, soft starter e inversor de frequência.' },
-      { title: 'Proteção elétrica', text: 'Configurações voltadas à proteção do motor e à operação segura do equipamento.' },
+      { title: 'Partida e acionamento', text: 'Soluções com partida direta, estrela-triângulo, soft starter e inversor de frequência.' },
+      { title: 'Proteção elétrica', text: 'Configurações voltadas à proteção elétrica e à operação segura do equipamento.' },
       { title: 'Comando local ou remoto', text: 'Opções de acionamento compatíveis com diferentes necessidades de operação e processo.' },
     ],
     applications: ['Bombas hidráulicas', 'Sistemas de irrigação', 'Compressores', 'Ventiladores', 'Máquinas industriais', 'Saneamento'],
@@ -34,7 +34,7 @@ const content: Record<CommercialLandingKind, LandingContent> = {
       { title: 'Compare a solução', text: 'A equipe apresenta a configuração e as condições comerciais adequadas.' },
     ],
     questions: [
-      { question: 'Como escolher o painel de comando correto?', answer: 'A escolha considera principalmente aplicação, potência do motor, tensão da rede, corrente nominal, quantidade de partidas e forma de acionamento.' },
+      { question: 'Como escolher o painel de comando correto?', answer: 'A escolha considera principalmente a aplicação, a potência da carga, a tensão da rede, a corrente nominal, a quantidade de partidas e a forma de acionamento.' },
       { question: 'O painel já chega pronto para instalação?', answer: 'O produto é preparado para integração à aplicação descrita. A instalação deve ser realizada por profissional habilitado, seguindo o projeto e as normas aplicáveis.' },
       { question: 'É possível solicitar uma configuração diferente?', answer: 'Sim. Quando um modelo de catálogo não atende ao projeto, é possível solicitar uma análise para configuração sob medida.' },
     ],
@@ -171,6 +171,6 @@ export default function CommercialLandingPage({ kind }: { kind: CommercialLandin
 
     <section className="shop-faq" aria-labelledby="commercial-faq-title"><div className="container shop-faq__inner"><header><span>Dúvidas frequentes</span><h2 id="commercial-faq-title">Antes de solicitar o orçamento</h2><p>Informações para agilizar a seleção e a cotação do painel.</p></header><div className="shop-faq__list">{page.questions.map(item => <details key={item.question}><summary>{item.question}<span aria-hidden="true"/></summary><p>{item.answer}</p></details>)}</div></div></section>
 
-    <section className="commercial-cta"><div className="container"><div><span>Precisa de uma configuração específica?</span><h2>Envie os dados do motor ou da aplicação.</h2><p>Informe potência, tensão, tipo de equipamento, forma de acionamento e cidade de entrega.</p></div><ButtonLink to="/orcamento">Pedir orçamento técnico</ButtonLink></div></section>
+    <section className="commercial-cta"><div className="container"><div><span>Precisa de uma configuração específica?</span><h2>Envie os dados do equipamento ou da aplicação.</h2><p>Informe potência, tensão, tipo de equipamento, forma de acionamento e cidade de entrega.</p></div><ButtonLink to="/orcamento">Pedir orçamento técnico</ButtonLink></div></section>
   </div>;
 }
