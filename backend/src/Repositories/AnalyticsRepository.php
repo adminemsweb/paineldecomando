@@ -39,7 +39,7 @@ final class AnalyticsRepository
     public function report(int $days): array
     {
         $start = (new DateTimeImmutable("-{$days} days"))->setTime(0, 0)->format('Y-m-d H:i:s');
-        $summary = $this->one('SELECT COUNT(DISTINCT session_id) visitors, SUM(CASE WHEN event_type=\'page_view\' THEN 1 ELSE 0 END) page_views, SUM(CASE WHEN event_type=\'product_view\' THEN 1 ELSE 0 END) product_views, SUM(CASE WHEN event_type=\'product_click\' THEN 1 ELSE 0 END) product_clicks, SUM(CASE WHEN event_type=\'search\' THEN 1 ELSE 0 END) searches, SUM(CASE WHEN event_type IN (\'whatsapp_click\',\'quote_click\') THEN 1 ELSE 0 END) conversions, SUM(CASE WHEN event_type=\'whatsapp_click\' THEN 1 ELSE 0 END) whatsapp_clicks, SUM(CASE WHEN event_type=\'quote_click\' THEN 1 ELSE 0 END) quote_clicks FROM analytics_events WHERE created_at>=:start', ['start'=>$start]);
+        $summary = $this->one('SELECT COUNT(DISTINCT CASE WHEN event_type=\'page_view\' THEN session_id END) visitors, SUM(CASE WHEN event_type=\'page_view\' THEN 1 ELSE 0 END) page_views, SUM(CASE WHEN event_type=\'product_view\' THEN 1 ELSE 0 END) product_views, SUM(CASE WHEN event_type=\'product_click\' THEN 1 ELSE 0 END) product_clicks, SUM(CASE WHEN event_type=\'search\' THEN 1 ELSE 0 END) searches, SUM(CASE WHEN event_type IN (\'whatsapp_click\',\'quote_click\') THEN 1 ELSE 0 END) conversions, SUM(CASE WHEN event_type=\'whatsapp_click\' THEN 1 ELSE 0 END) whatsapp_clicks, SUM(CASE WHEN event_type=\'quote_click\' THEN 1 ELSE 0 END) quote_clicks FROM analytics_events WHERE created_at>=:start', ['start'=>$start]);
         $summary = array_map(static fn($value) => (int)$value, $summary);
         $summary['conversion_rate'] = $summary['product_views'] > 0 ? round(($summary['conversions'] / $summary['product_views']) * 100, 1) : 0.0;
 
@@ -50,7 +50,7 @@ final class AnalyticsRepository
             'products'=>$this->all('SELECT e.product_slug slug, COALESCE(MAX(p.name),e.product_slug) name, SUM(CASE WHEN e.event_type=\'product_view\' THEN 1 ELSE 0 END) views, SUM(CASE WHEN e.event_type=\'product_click\' THEN 1 ELSE 0 END) clicks, SUM(CASE WHEN e.event_type IN (\'whatsapp_click\',\'quote_click\') THEN 1 ELSE 0 END) conversions FROM analytics_events e LEFT JOIN products p ON p.slug=e.product_slug AND p.deleted_at IS NULL WHERE e.created_at>=:start AND e.product_slug IS NOT NULL GROUP BY e.product_slug ORDER BY views DESC,clicks DESC LIMIT 10', ['start'=>$start]),
             'searches'=>$this->all('SELECT search_term term, COUNT(*) searches, SUM(CASE WHEN result_count=0 THEN 1 ELSE 0 END) without_results FROM analytics_events WHERE created_at>=:start AND event_type=\'search\' AND search_term IS NOT NULL GROUP BY search_term ORDER BY searches DESC LIMIT 10', ['start'=>$start]),
             'pages'=>$this->all('SELECT path,COUNT(*) views FROM analytics_events WHERE created_at>=:start AND event_type=\'page_view\' GROUP BY path ORDER BY views DESC LIMIT 10', ['start'=>$start]),
-            'devices'=>$this->all('SELECT device_type device,COUNT(DISTINCT session_id) visitors FROM analytics_events WHERE created_at>=:start GROUP BY device_type ORDER BY visitors DESC', ['start'=>$start]),
+            'devices'=>$this->all('SELECT device_type device,COUNT(DISTINCT session_id) visitors FROM analytics_events WHERE created_at>=:start AND event_type=\'page_view\' GROUP BY device_type ORDER BY visitors DESC', ['start'=>$start]),
         ];
     }
 

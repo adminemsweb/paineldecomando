@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 describe('dashboard administrativo', () => {
-  it('apresenta as métricas em linguagem clara e renderiza a série temporal', async () => {
+  it('apresenta as métricas em linguagem clara quando ainda há poucos dados', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async input => {
       const url = String(input);
       const data = url.includes('/admin/analytics') ? {
@@ -26,10 +26,10 @@ describe('dashboard administrativo', () => {
 
     render(<MemoryRouter><AdminDashboardPage/></MemoryRouter>);
 
-    expect(await screen.findByText('Resumo do período')).toBeInTheDocument();
-    expect(screen.getByText('pessoas diferentes')).toBeInTheDocument();
-    expect(screen.getByText('O que os números mostram')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name:'Gráfico de acessos e painéis visualizados por dia' })).toBeInTheDocument();
+    expect(await screen.findByText('Primeiros dados')).toBeInTheDocument();
+    expect(screen.getByText('pessoas que acessaram')).toBeInTheDocument();
+    expect(screen.getByText('Do acesso ao contato')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name:'Gráfico de acessos e painéis visualizados por dia' })).not.toBeInTheDocument();
     expect(screen.getByText('painel para bomba')).toBeInTheDocument();
   });
 });
