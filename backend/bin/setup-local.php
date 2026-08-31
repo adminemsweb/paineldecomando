@@ -1012,5 +1012,14 @@ require __DIR__ . '/upsert-fire-pump-10cv-jockey-2cv-220v.php';
 require __DIR__ . '/upsert-fire-pump-20cv-jockey-3cv-220v.php';
 require __DIR__ . '/upsert-fire-pump-15cv-jockey-3cv-220v.php';
 require __DIR__ . '/upsert-fire-pump-10cv-jockey-3cv-220v.php';
+require __DIR__ . '/upsert-pump-alternation-1cv-220v.php';
+require __DIR__ . '/upsert-pump-alternation-1-5cv-220v.php';
+require __DIR__ . '/upsert-pump-alternation-2cv-220v.php';
+require __DIR__ . '/upsert-pump-alternation-1cv-380v.php';
+require __DIR__ . '/upsert-pump-alternation-1-5cv-380v.php';
+require __DIR__ . '/upsert-pump-alternation-3cv-380v.php';
+require __DIR__ . '/upsert-pump-alternation-5cv-380v.php';
+require __DIR__ . '/upsert-pump-alternation-3cv-220v.php';
+require __DIR__ . '/upsert-pump-alternation-5cv-220v.php';
 
 echo "Banco local preparado.\nAdmin: {$email}\n";
