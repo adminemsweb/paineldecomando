@@ -121,6 +121,12 @@ const productNavigation = [
   {
     label: "Todos os Produtos",
     to: "/produtos",
+    sections: [],
+    featured: undefined,
+  },
+  {
+    label: "Mais Categorias",
+    to: "/produtos?categoria=mais-categorias",
     sections: [
       { title: "Painel para Estação Elevatória", to: "/produtos?busca=Painel%20para%20Esta%C3%A7%C3%A3o%20Elevat%C3%B3ria" },
       { title: "Painel de Partida Direta", to: "/produtos?busca=Painel%20de%20Partida%20Direta" },
