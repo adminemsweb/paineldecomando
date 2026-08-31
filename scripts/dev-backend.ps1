@@ -17,5 +17,7 @@ foreach ($connection in $listener) {
 Start-Sleep -Milliseconds 500
 Write-Host '[DEV] Backend/API: http://127.0.0.1:8080' -ForegroundColor Cyan
 Set-Location -LiteralPath $backend
+& php.exe bin/ensure-local-schema.php
+if ($LASTEXITCODE -ne 0) { throw 'Não foi possível preparar o schema local.' }
 & php.exe -S 127.0.0.1:8080 -t public public/router.php
 exit $LASTEXITCODE
