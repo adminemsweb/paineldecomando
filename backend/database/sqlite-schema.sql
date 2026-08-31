@@ -145,3 +145,23 @@ CREATE TABLE IF NOT EXISTS password_resets (
 );
 
 CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token_hash, status, expires_at);
+
+CREATE TABLE IF NOT EXISTS analytics_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    path TEXT NOT NULL,
+    product_slug TEXT NULL,
+    search_term TEXT NULL,
+    result_count INTEGER NULL,
+    target_url TEXT NULL,
+    referrer TEXT NULL,
+    device_type TEXT NOT NULL DEFAULT 'unknown',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_created ON analytics_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_type_created ON analytics_events(event_type,created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_product ON analytics_events(product_slug,event_type,created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_search ON analytics_events(search_term,event_type,created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_session ON analytics_events(session_id,created_at);

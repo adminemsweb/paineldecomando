@@ -16,6 +16,7 @@ use App\Services\CorreiosService;
 use App\Support\CurlTlsOptions;
 use App\Repositories\AuthRepository;
 use App\Repositories\CategoryRepository;
+use App\Repositories\AnalyticsRepository;
 use App\Services\AuthService;
 use App\Validators\AuthValidator;
 use App\Validators\LeadValidator;
@@ -259,6 +260,22 @@ $test('Falhas repetidas não bloqueiam cliente nem administrador', static functi
     $assert($service->login(['email'=>'cliente@example.com','password'=>'Senha123'])['user']['email'] === 'cliente@example.com', 'O cliente permaneceu bloqueado.');
     for ($attempt = 0; $attempt < 6; $attempt++) { try { $service->login(['email'=>'admin@example.com','password'=>'Errada']); } catch (\App\Exceptions\AuthException) {} }
     $assert($service->adminLogin(['email'=>'admin@example.com','password'=>'Admin123'])['user']['role'] === 'admin', 'Falhas no login de cliente bloquearam o administrador.');
+});
+
+$test('Analytics registra eventos anônimos e consolida o dashboard', static function () use ($assert): void {
+    $pdo = new PDO('sqlite::memory:', options:[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+    $pdo->exec("CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, slug TEXT, deleted_at TEXT NULL); CREATE TABLE analytics_events (id INTEGER PRIMARY KEY AUTOINCREMENT,event_type TEXT NOT NULL,session_id TEXT NOT NULL,path TEXT NOT NULL,product_slug TEXT NULL,search_term TEXT NULL,result_count INTEGER NULL,target_url TEXT NULL,referrer TEXT NULL,device_type TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+    $pdo->exec("INSERT INTO products (id,name,slug,deleted_at) VALUES (1,'Painel Teste','painel-teste',NULL)");
+    $repository = new AnalyticsRepository($pdo);
+    $base = ['session_id'=>'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee','path'=>'/produtos/painel-teste','product_slug'=>'painel-teste','search_term'=>null,'result_count'=>null,'target_url'=>null,'referrer'=>null,'device_type'=>'desktop'];
+    $repository->record(['event_type'=>'page_view', ...$base]);
+    $repository->record(['event_type'=>'product_view', ...$base]);
+    $repository->record(['event_type'=>'whatsapp_click', ...$base]);
+    $repository->record(['event_type'=>'search', ...$base, 'path'=>'/produtos', 'product_slug'=>null, 'search_term'=>'painel 15cv', 'result_count'=>0]);
+    $report = $repository->report(30);
+    $assert($report['summary']['visitors'] === 1 && $report['summary']['product_views'] === 1, 'Resumo de visitantes ou produtos incorreto.');
+    $assert($report['summary']['conversions'] === 1 && $report['products'][0]['name'] === 'Painel Teste', 'Conversão ou ranking de produto incorreto.');
+    $assert((int)$report['searches'][0]['without_results'] === 1, 'Pesquisa sem resultado não foi contabilizada.');
 });
 
 exit($failures === [] ? 0 : 1);

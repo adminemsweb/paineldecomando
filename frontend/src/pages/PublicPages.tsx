@@ -6,6 +6,7 @@ import { PaymentIcon } from '../components/common/PaymentIcon';
 import { ShippingCalculator } from '../components/common/ShippingCalculator';
 import { companyConfig } from '../constants/company';
 import { ApiError, apiRequest } from '../services/api';
+import { trackAnalytics } from '../services/analytics';
 import { Customer, useAuth } from '../auth/AuthContext';
 import { PolicyDocument } from './policies/PolicyDocument';
 import { TechnicalTicketPage } from './TechnicalTicketPage';
@@ -123,6 +124,12 @@ function ManagedStorefrontListing({ copy }: { copy: { eyebrow: string; title: st
       return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
     });
   }, [activeLine, activeSubcategory, availability, maxPrice, minPrice, products, search, sort]);
+  useEffect(() => {
+    const term = search.trim();
+    if (!term || products === null) return;
+    const timeout = window.setTimeout(() => trackAnalytics({ eventType: 'search', path: '/produtos', searchTerm: term, resultCount: visibleProducts.length }), 800);
+    return () => window.clearTimeout(timeout);
+  }, [products, search, visibleProducts.length]);
   if (failed) return <StorefrontListing copy={copy}/>;
   return <>
     <section className="catalog-page"><div className="container catalog-layout">

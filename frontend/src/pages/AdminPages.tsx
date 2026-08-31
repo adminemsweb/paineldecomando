@@ -41,6 +41,16 @@ export type AdminProduct = {
   updated_at: string;
 };
 
+type AnalyticsReport = {
+  period_days: number;
+  summary: { visitors:number; page_views:number; product_views:number; product_clicks:number; searches:number; conversions:number; whatsapp_clicks:number; quote_clicks:number; conversion_rate:number };
+  daily: { date:string; page_views:number; product_views:number; conversions:number }[];
+  products: { slug:string; name:string; views:number; clicks:number; conversions:number }[];
+  searches: { term:string; searches:number; without_results:number }[];
+  pages: { path:string; views:number }[];
+  devices: { device:string; visitors:number }[];
+};
+
 const emptyProduct: Omit<AdminProduct, 'id' | 'updated_at'> = {
   name: '', slug: '', summary: '', description: '', features: [], benefits: [], components: [], voltages: '', power_range: '',
   protection_rating: '', image_url: '', gallery_images: [], video_url: '', video_urls: [], category_name: '', reference_code: '', brand: 'Painel de Comando', model: '',
@@ -80,12 +90,39 @@ export function AdminLoginPage() {
 
 export function AdminDashboardPage() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
-  useEffect(() => { apiRequest<AdminProduct[]>('/admin/products').then(response => setProducts(response.data)).catch(() => undefined); }, []);
+  const [analytics, setAnalytics] = useState<AnalyticsReport | null>(null);
+  const [days, setDays] = useState(30);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    Promise.all([apiRequest<AdminProduct[]>('/admin/products'), apiRequest<AnalyticsReport>(`/admin/analytics?days=${days}`)])
+      .then(([productResponse, analyticsResponse]) => { setProducts(productResponse.data); setAnalytics(analyticsResponse.data); })
+      .catch(requestError => setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível carregar o dashboard.'))
+      .finally(() => setLoading(false));
+  }, [days]);
   const published = products.filter(product => product.status === 'published').length;
+  const summary = analytics?.summary;
+  const maxDaily = Math.max(1, ...(analytics?.daily.map(day => Number(day.page_views)) ?? [1]));
   return <>
-    <div className="admin-heading"><div><span className="eyebrow">Visão geral</span><h1>Dashboard</h1><p>Acompanhe o catálogo e acesse rapidamente o que precisa de atenção.</p></div><Link className="button button--primary" to="/admin/produtos">Gerenciar produtos</Link></div>
-    <div className="admin-cards admin-cards--stats"><article><span>Total de produtos</span><strong>{products.length}</strong><small>Registros ativos no catálogo</small></article><article><span>Publicados</span><strong>{published}</strong><small>Visíveis para os clientes</small></article><article><span>Rascunhos</span><strong>{products.filter(product => product.status === 'draft').length}</strong><small>Aguardando publicação</small></article></div>
-    <section className="admin-panel"><div className="admin-panel__heading"><div><span>Atalho</span><h2>Catálogo de produtos</h2></div></div><p>Edite nomes, descrições, imagens, características técnicas, visibilidade e ordem de exibição em um único lugar.</p></section>
+    <div className="admin-heading admin-dashboard-heading"><div><span className="eyebrow">Visão geral</span><h1>Dashboard</h1><p>Acompanhe o interesse dos visitantes e o desempenho do catálogo.</p></div><div><label>Período<select aria-label="Período do dashboard" value={days} onChange={event => { setLoading(true); setError(''); setDays(Number(event.target.value)); }}><option value={7}>Últimos 7 dias</option><option value={30}>Últimos 30 dias</option><option value={90}>Últimos 90 dias</option></select></label><Link className="button button--primary" to="/admin/produtos">Gerenciar produtos</Link></div></div>
+    {error && <div className="admin-alert admin-alert--error" role="alert">{error}</div>}
+    {loading ? <div className="admin-empty" role="status">Carregando métricas…</div> : <>
+      <div className="admin-cards admin-cards--analytics">
+        <article><span>Visitantes</span><strong>{summary?.visitors ?? 0}</strong><small>navegadores únicos</small></article>
+        <article><span>Visualizações</span><strong>{summary?.page_views ?? 0}</strong><small>páginas acessadas</small></article>
+        <article><span>Produtos vistos</span><strong>{summary?.product_views ?? 0}</strong><small>detalhes de painéis</small></article>
+        <article><span>Pesquisas</span><strong>{summary?.searches ?? 0}</strong><small>termos procurados</small></article>
+        <article><span>Conversões</span><strong>{summary?.conversions ?? 0}</strong><small>{summary?.conversion_rate ?? 0}% dos produtos vistos</small></article>
+      </div>
+      <div className="analytics-layout">
+        <section className="admin-panel analytics-panel analytics-panel--wide"><header><div><span>Tráfego</span><h2>Acessos por dia</h2></div><small>{summary?.whatsapp_clicks ?? 0} WhatsApp · {summary?.quote_clicks ?? 0} orçamentos</small></header><div className="analytics-chart">{analytics?.daily.length ? analytics.daily.map(day => <div key={day.date}><span style={{ height:`${Math.max(4, (Number(day.page_views) / maxDaily) * 100)}%` }}><i>{day.page_views}</i></span><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' })}</small></div>) : <p>Nenhum acesso registrado neste período.</p>}</div></section>
+        <section className="admin-panel analytics-panel"><header><div><span>Dispositivos</span><h2>Como acessam</h2></div></header><div className="analytics-devices">{analytics?.devices.length ? analytics.devices.map(device => <div key={device.device}><span>{device.device === 'mobile' ? 'Celular' : device.device === 'tablet' ? 'Tablet' : device.device === 'desktop' ? 'Computador' : 'Outro'}</span><strong>{device.visitors}</strong></div>) : <p>Sem dados ainda.</p>}</div></section>
+        <section className="admin-panel analytics-panel analytics-panel--wide"><header><div><span>Catálogo</span><h2>Painéis mais procurados</h2></div></header><div className="analytics-table-wrap"><table className="analytics-table"><thead><tr><th>Produto</th><th>Visualizações</th><th>Cliques</th><th>Conversões</th></tr></thead><tbody>{analytics?.products.length ? analytics.products.map(product => <tr key={product.slug}><td><Link to={`/produtos/${product.slug}`} target="_blank">{product.name}</Link></td><td>{product.views}</td><td>{product.clicks}</td><td>{product.conversions}</td></tr>) : <tr><td colSpan={4}>Os acessos aos produtos começarão a aparecer aqui.</td></tr>}</tbody></table></div></section>
+        <section className="admin-panel analytics-panel"><header><div><span>Intenção</span><h2>Termos pesquisados</h2></div></header><ol className="analytics-ranking">{analytics?.searches.length ? analytics.searches.map(item => <li key={item.term}><span>{item.term}</span><strong>{item.searches}</strong>{Number(item.without_results) > 0 && <small>{item.without_results} sem resultado</small>}</li>) : <li><span>Nenhuma pesquisa registrada.</span></li>}</ol></section>
+        <section className="admin-panel analytics-panel analytics-panel--wide"><header><div><span>Navegação</span><h2>Páginas mais acessadas</h2></div></header><ol className="analytics-ranking analytics-ranking--pages">{analytics?.pages.length ? analytics.pages.map(page => <li key={page.path}><span>{page.path}</span><strong>{page.views}</strong></li>) : <li><span>Nenhuma página registrada.</span></li>}</ol></section>
+        <section className="admin-panel analytics-panel"><header><div><span>Catálogo</span><h2>Situação dos produtos</h2></div></header><div className="analytics-devices"><div><span>Total</span><strong>{products.length}</strong></div><div><span>Publicados</span><strong>{published}</strong></div><div><span>Rascunhos</span><strong>{products.filter(product => product.status === 'draft').length}</strong></div></div></section>
+      </div>
+    </>}
   </>;
 }
 

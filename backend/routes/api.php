@@ -4,11 +4,13 @@ declare(strict_types=1);
 use App\Controllers\ProductController;
 use App\Controllers\ShippingController;
 use App\Controllers\AuthController;
+use App\Controllers\AnalyticsController;
 use App\Core\Request;
 use App\Core\Response;
 use App\Database\Connection;
 use App\Repositories\ProductRepository;
 use App\Repositories\AuthRepository;
+use App\Repositories\AnalyticsRepository;
 use App\Services\AuthService;
 use App\Services\LeadService;
 use App\Services\CorreiosService;
@@ -17,6 +19,11 @@ use App\Validators\LeadValidator;
 use App\Middleware\RateLimiter;
 
 $router->get('/api/v1/health', static fn() => Response::success(['service' => 'site-industrial-api', 'version' => '1.0.0'], 'API disponível.'));
+$router->post('/api/v1/analytics/events', static function (Request $request) {
+    RateLimiter::enforce('analytics-client', 180, 60, failClosed: true);
+    RateLimiter::enforce('analytics-global', 5000, 60, 'global', true);
+    (new AnalyticsController(new AnalyticsRepository(Connection::get())))->store($request);
+});
 
 $router->get('/api/v1/products', static function (Request $request) {
     (new ProductController(new ProductRepository(Connection::get())))->index($request);
