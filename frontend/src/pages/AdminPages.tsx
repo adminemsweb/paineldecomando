@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/common/Icon';
 import { companyConfig } from '../constants/company';
 import { ApiError, apiRequest } from '../services/api';
+import { buildProductsCsv } from '../utils/productCsv';
 
 export type AdminUser = { id: number; name: string; email: string; role: string };
 export type AdminProduct = {
@@ -90,6 +91,20 @@ export function AdminDashboardPage() {
 
 function slugify(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function downloadProductsCsv(products: AdminProduct[], panel: string) {
+  const date = new Date().toISOString().slice(0, 10);
+  const scope = panel === 'all' ? 'todos' : slugify(panel);
+  const blob = new Blob([`\uFEFF${buildProductsCsv(products)}`], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `produtos-${scope}-${date}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 type UploadedMedia = { url: string; kind: 'image' | 'video'; original_name: string; size_bytes: number };
@@ -261,6 +276,7 @@ function ProductEditor({ product, onSaved, onCancel }: { product: AdminProduct |
 export function AdminProductsPage() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [search, setSearch] = useState('');
+  const [panel, setPanel] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -278,7 +294,15 @@ export function AdminProductsPage() {
       .catch(requestError => setError(requestError instanceof ApiError ? requestError.message : 'Não foi possível carregar os produtos.'))
       .finally(() => setLoading(false));
   }, []);
-  const visible = useMemo(() => { const term = search.trim().toLocaleLowerCase('pt-BR'); return term ? products.filter(product => `${product.name} ${product.slug}`.toLocaleLowerCase('pt-BR').includes(term)) : products; }, [products, search]);
+  const panelOptions = useMemo(() => [...new Set(products.map(product => product.category_name || 'Sem categoria'))].sort((first, second) => first.localeCompare(second, 'pt-BR')), [products]);
+  const visible = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase('pt-BR');
+    return products.filter(product => {
+      const matchesPanel = panel === 'all' || (product.category_name || 'Sem categoria') === panel;
+      const searchable = `${product.name} ${product.slug} ${product.reference_code ?? ''} ${product.model ?? ''} ${product.category_name ?? ''}`.toLocaleLowerCase('pt-BR');
+      return matchesPanel && (!term || searchable.includes(term));
+    });
+  }, [panel, products, search]);
 
   function saved(product: AdminProduct) {
     setProducts(current => current.some(item => item.id === product.id) ? current.map(item => item.id === product.id ? product : item) : [...current, product]);
@@ -295,7 +319,13 @@ export function AdminProductsPage() {
     {notice && <div className="admin-alert admin-alert--success" role="status">{notice}</div>}
     {error && <div className="admin-alert admin-alert--error" role="alert">{error}<button type="button" onClick={load}>Tentar novamente</button></div>}
     <section className="admin-panel admin-products-panel">
-      <div className="admin-toolbar"><label><span>Buscar produto</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Nome ou endereço…"/></label><span>{visible.length} {visible.length === 1 ? 'produto' : 'produtos'}</span></div>
+      <div className="admin-toolbar">
+        <div className="admin-toolbar__filters">
+          <label><span>Buscar produto</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Nome, referência ou endereço…"/></label>
+          <label><span>Filtrar por painel</span><select value={panel} onChange={event => setPanel(event.target.value)}><option value="all">Todos os painéis</option>{panelOptions.map(option => <option value={option} key={option}>{option}</option>)}</select></label>
+        </div>
+        <div className="admin-toolbar__actions"><span>{visible.length} {visible.length === 1 ? 'produto' : 'produtos'}</span><button type="button" onClick={() => downloadProductsCsv(visible, panel)} disabled={loading || visible.length === 0}>↓ Exportar Excel</button></div>
+      </div>
       {loading ? <div className="admin-empty" role="status">Carregando produtos…</div> : visible.length === 0 ? <div className="admin-empty"><strong>Nenhum produto encontrado</strong><p>Altere a busca ou adicione o primeiro produto.</p></div> : <div className="admin-product-table-wrap"><table className="admin-product-table"><thead><tr><th>Produto</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ordem</th><th>Atualização</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>{visible.map(product => <tr key={product.id}><td><div className="admin-product-cell">{product.image_url ? <img src={product.image_url} alt=""/> : <span aria-hidden="true">PC</span>}<div><strong>{product.name}</strong><small>/{product.slug}</small></div></div></td><td>{product.price_cents == null ? 'Sob consulta' : (product.price_cents / 100).toLocaleString('pt-BR', { style:'currency', currency:'BRL' })}</td><td>{product.stock_status === 'in_stock' ? `${product.stock_quantity} un.` : product.stock_status === 'out_of_stock' ? 'Sem estoque' : 'Sob encomenda'}</td><td><span className={`admin-status admin-status--${product.status}`}>{product.status === 'published' ? 'Publicado' : product.status === 'draft' ? 'Rascunho' : 'Arquivado'}</span></td><td>{product.sort_order}</td><td>{new Date(product.updated_at).toLocaleDateString('pt-BR')}</td><td><div className="admin-row-actions"><button type="button" onClick={() => setEditing(product)}>Editar</button><Link to={`/produtos/${product.slug}`} target="_blank">Ver</Link><button className="danger" type="button" onClick={() => remove(product)}>Remover</button></div></td></tr>)}</tbody></table></div>}
     </section>
     {editing !== undefined && <ProductEditor key={editing?.id ?? 'new'} product={editing} onSaved={saved} onCancel={() => setEditing(undefined)}/>} 

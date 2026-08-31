@@ -1,7 +1,46 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AdminCategoriesPage, AdminProductsPage } from './AdminPages';
+import { AdminCategoriesPage, AdminProductsPage, type AdminProduct } from './AdminPages';
+import { buildProductsCsv } from '../utils/productCsv';
+
+function productFixture(overrides: Partial<AdminProduct> = {}): AdminProduct {
+  return {
+    id: 1,
+    name: 'Painel Estrela Triângulo 15CV',
+    slug: 'painel-estrela-triangulo-15cv',
+    summary: 'Partida segura',
+    description: 'Descrição técnica',
+    features: ['Manual e automático'],
+    benefits: ['Maior proteção'],
+    components: ['Contator'],
+    voltages: '220V',
+    power_range: '15CV',
+    protection_rating: 'IP55',
+    image_url: '/images/painel.png',
+    gallery_images: [],
+    video_url: null,
+    video_urls: [],
+    category_name: 'Estrela-Triângulo',
+    reference_code: 'PDC-15CV',
+    brand: 'Painel de Comando',
+    model: '15CV 220V',
+    price_cents: 150800,
+    installments: 3,
+    stock_status: 'in_stock',
+    stock_quantity: 5,
+    lead_time: 'Disponível em 3 dias úteis',
+    sales_channel: 'both',
+    warranty_days: 365,
+    sort_order: 1,
+    featured: false,
+    status: 'published',
+    seo_title: null,
+    seo_description: null,
+    updated_at: '2026-08-31T12:00:00Z',
+    ...overrides,
+  };
+}
 
 afterEach(() => {
   cleanup();
@@ -58,5 +97,33 @@ describe('gerenciamento de categorias', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/admin/categories'), expect.objectContaining({ method: 'POST' })));
     expect(await screen.findByText('Painel Estrela Triângulo Econômico')).toBeInTheDocument();
+  });
+});
+
+describe('filtro e exportação de produtos', () => {
+  it('filtra a lista pelo tipo de painel', async () => {
+    const products = [
+      productFixture(),
+      productFixture({ id: 2, name: 'Painel com Soft Starter 30CV', slug: 'painel-soft-starter-30cv', category_name: 'Soft Starter' }),
+    ];
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ data: products }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    render(<MemoryRouter><AdminProductsPage/></MemoryRouter>);
+    expect(await screen.findByText('Painel com Soft Starter 30CV')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Filtrar por painel' }), { target: { value: 'Soft Starter' } });
+
+    expect(screen.getByText('Painel com Soft Starter 30CV')).toBeInTheDocument();
+    expect(screen.queryByText('Painel Estrela Triângulo 15CV')).not.toBeInTheDocument();
+    expect(screen.getByText('1 produto')).toBeInTheDocument();
+  });
+
+  it('gera CSV compatível com Excel com os dados filtrados', () => {
+    const csv = buildProductsCsv([productFixture({ summary: '=FÓRMULA PERIGOSA' })]);
+
+    expect(csv).toContain('"Produto";"Tipo de painel";"Referência"');
+    expect(csv).toContain('"Painel Estrela Triângulo 15CV"');
+    expect(csv).toContain('"1508,00"');
+    expect(csv).toContain('"\'=FÓRMULA PERIGOSA"');
+    expect(csv).toContain('"https://paineldecomando.com.br/produtos/painel-estrela-triangulo-15cv"');
   });
 });
