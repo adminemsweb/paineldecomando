@@ -26,7 +26,8 @@ describe('dashboard administrativo', () => {
 
     render(<MemoryRouter><AdminDashboardPage/></MemoryRouter>);
 
-    expect(await screen.findByText('Primeiros dados')).toBeInTheDocument();
+    expect(await screen.findByText('Coleta iniciada')).toBeInTheDocument();
+    expect(screen.getByLabelText('Acessos nos últimos sete dias com dados')).toBeInTheDocument();
     expect(screen.getByText('pessoas que acessaram')).toBeInTheDocument();
     expect(screen.getByText('Do acesso ao contato')).toBeInTheDocument();
     expect(screen.queryByRole('img', { name:'Gráfico de acessos e painéis visualizados por dia' })).not.toBeInTheDocument();
