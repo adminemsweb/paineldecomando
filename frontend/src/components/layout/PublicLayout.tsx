@@ -139,6 +139,8 @@ const productNavigation = [
   },
 ];
 
+const moreCategories = productNavigation.find((group) => group.label === "Mais Categorias")?.sections ?? [];
+
 export function PublicLayout() {
   const { user, loading: authLoading } = useAuth();
   const [open, setOpen] = useState(false);
@@ -146,6 +148,7 @@ export function PublicLayout() {
   const [quoteProduct, setQuoteProduct] = useState("Painel Estrela-Triângulo");
   const [quotePhone, setQuotePhone] = useState("");
   const [quoteSummary, setQuoteSummary] = useState("");
+  const [moreCategoriesOpen, setMoreCategoriesOpen] = useState(false);
   const navigate = useNavigate();
   const { pathname, search: locationSearch } = useLocation();
   const selectedLine = new URLSearchParams(locationSearch).get("linha");
@@ -158,6 +161,15 @@ export function PublicLayout() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [pathname, locationSearch]);
+
+  useEffect(() => {
+    if (!moreCategoriesOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMoreCategoriesOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [moreCategoriesOpen]);
 
   const scrollToTop = () =>
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -303,21 +315,67 @@ export function PublicLayout() {
               </NavLink>
               {productNavigation.map((group) => (
                   <div className="product-nav__item" key={group.label}>
-                    <Link
-                      className={activeProductGroup?.label === group.label ? "product-nav__trigger active" : "product-nav__trigger"}
-                      to={group.to}
-                      onClick={() => {
-                        setOpen(false);
-                      }}
-                    >
-                      {group.label}
-                    </Link>
+                    {group.label === "Mais Categorias" ? (
+                      <button
+                        className={moreCategoriesOpen ? "product-nav__trigger active" : "product-nav__trigger"}
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-expanded={moreCategoriesOpen}
+                        onClick={() => {
+                          setMoreCategoriesOpen(true);
+                          setOpen(false);
+                        }}
+                      >
+                        {group.label}
+                      </button>
+                    ) : (
+                      <Link
+                        className={activeProductGroup?.label === group.label ? "product-nav__trigger active" : "product-nav__trigger"}
+                        to={group.to}
+                        onClick={() => {
+                          setOpen(false);
+                        }}
+                      >
+                        {group.label}
+                      </Link>
+                    )}
                   </div>
                 ))}
             </div>
           </nav>
         </div>
       </header>
+
+      {moreCategoriesOpen && (
+        <div className="more-categories-modal" role="presentation" onMouseDown={() => setMoreCategoriesOpen(false)}>
+          <section
+            className="more-categories-modal__panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="more-categories-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <span>Explore o catálogo</span>
+                <h2 id="more-categories-title">Mais Categorias</h2>
+              </div>
+              <button type="button" aria-label="Fechar mais categorias" onClick={() => setMoreCategoriesOpen(false)}>×</button>
+            </header>
+            <nav aria-label="Mais categorias de produtos">
+              {moreCategories.map((category) => (
+                <Link key={category.title} to={category.to} onClick={() => setMoreCategoriesOpen(false)}>
+                  <span>{category.title}</span>
+                  <b aria-hidden="true">→</b>
+                </Link>
+              ))}
+            </nav>
+            <Link className="more-categories-modal__all" to="/produtos" onClick={() => setMoreCategoriesOpen(false)}>
+              Ver todos os produtos
+            </Link>
+          </section>
+        </div>
+      )}
 
       <main id="conteudo">
         <Outlet />
