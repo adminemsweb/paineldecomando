@@ -314,20 +314,51 @@ export function PublicLayout() {
                 Início
               </NavLink>
               {productNavigation.map((group) => (
-                  <div className="product-nav__item" key={group.label}>
+                  <div
+                    className={
+                      group.label === "Mais Categorias" && moreCategoriesOpen
+                        ? "product-nav__item product-nav__item--open"
+                        : "product-nav__item"
+                    }
+                    key={group.label}
+                    onMouseEnter={() => {
+                      if (group.label === "Mais Categorias") setMoreCategoriesOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      if (group.label === "Mais Categorias") setMoreCategoriesOpen(false);
+                    }}
+                  >
                     {group.label === "Mais Categorias" ? (
-                      <button
-                        className={moreCategoriesOpen ? "product-nav__trigger active" : "product-nav__trigger"}
-                        type="button"
-                        aria-haspopup="dialog"
-                        aria-expanded={moreCategoriesOpen}
-                        onClick={() => {
-                          setMoreCategoriesOpen(true);
-                          setOpen(false);
-                        }}
-                      >
-                        {group.label}
-                      </button>
+                      <>
+                        <button
+                          className={moreCategoriesOpen ? "product-nav__trigger active" : "product-nav__trigger"}
+                          type="button"
+                          aria-haspopup="menu"
+                          aria-expanded={moreCategoriesOpen}
+                          onClick={() => setMoreCategoriesOpen((current) => !current)}
+                        >
+                          {group.label}
+                          <span aria-hidden="true" />
+                        </button>
+                        <div className="product-nav__menu product-nav__menu--compact" role="menu">
+                          <div className="product-nav__options">
+                            {moreCategories.map((category) => (
+                              <Link
+                                key={category.title}
+                                to={category.to}
+                                role="menuitem"
+                                onClick={() => {
+                                  setMoreCategoriesOpen(false);
+                                  setOpen(false);
+                                }}
+                              >
+                                {category.title}
+                                <span aria-hidden="true">→</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </>
                     ) : (
                       <Link
                         className={activeProductGroup?.label === group.label ? "product-nav__trigger active" : "product-nav__trigger"}
@@ -345,37 +376,6 @@ export function PublicLayout() {
           </nav>
         </div>
       </header>
-
-      {moreCategoriesOpen && (
-        <div className="more-categories-modal" role="presentation" onMouseDown={() => setMoreCategoriesOpen(false)}>
-          <section
-            className="more-categories-modal__panel"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="more-categories-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <header>
-              <div>
-                <span>Explore o catálogo</span>
-                <h2 id="more-categories-title">Mais Categorias</h2>
-              </div>
-              <button type="button" aria-label="Fechar mais categorias" onClick={() => setMoreCategoriesOpen(false)}>×</button>
-            </header>
-            <nav aria-label="Mais categorias de produtos">
-              {moreCategories.map((category) => (
-                <Link key={category.title} to={category.to} onClick={() => setMoreCategoriesOpen(false)}>
-                  <span>{category.title}</span>
-                  <b aria-hidden="true">→</b>
-                </Link>
-              ))}
-            </nav>
-            <Link className="more-categories-modal__all" to="/produtos" onClick={() => setMoreCategoriesOpen(false)}>
-              Ver todos os produtos
-            </Link>
-          </section>
-        </div>
-      )}
 
       <main id="conteudo">
         <Outlet />
